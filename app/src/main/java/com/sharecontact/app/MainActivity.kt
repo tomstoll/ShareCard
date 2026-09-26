@@ -43,21 +43,29 @@ class MainActivity : ComponentActivity() {
     private var nfcTargetCard by mutableStateOf<ShareCard?>(null)
     private var nfcWriteState by mutableStateOf<NfcWriteState>(NfcWriteState.WaitingForTag)
 
-    // Storage Access Framework: Export Full Backup
-    private val exportBackupLauncher = registerForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { uri: Uri? ->
-        if (uri != null) {
-            try {
-                contentResolver.openOutputStream(uri)?.use { stream ->
-                    val jsonContent = repository.exportFullBackupJson()
-                    stream.write(jsonContent.toByteArray(Charsets.UTF_8))
-                }
-                Toast.makeText(this, "Backup exported successfully!", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this, "Failed to export backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+    // Native Sharesheet export: offers Google Drive, local Files, email, and Quick Share
+    private fun shareExportFile() {
+        try {
+            val jsonContent = repository.exportFullBackupJson()
+            val exportFile = java.io.File(cacheDir, "share_card_backup.json")
+            exportFile.writeText(jsonContent, Charsets.UTF_8)
+
+            val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                exportFile
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/json"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+
+            startActivity(Intent.createChooser(shareIntent, "Export Backup to..."))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Export failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -184,7 +192,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenNfcGuide = { currentScreen = Screen.NfcGuide(returnTo = Screen.Settings) },
                                 onExportBackup = {
-                                    exportBackupLauncher.launch("share_contact_backup.json")
+                                    shareExportFile()
                                 },
                                 onImportBackup = {
                                     importBackupLauncher.launch(arrayOf("application/json", "text/x-vcard", "text/vcard", "*/*"))

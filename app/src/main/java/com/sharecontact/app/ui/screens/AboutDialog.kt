@@ -29,6 +29,7 @@ fun AboutDialog(
 ) {
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
+    val githubUrl = stringResource(R.string.github_repo_url)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -98,7 +99,7 @@ fun AboutDialog(
 
                 OutlinedButton(
                     onClick = {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tomba/share_contact_app"))
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
                         try {
                             context.startActivity(browserIntent)
                         } catch (e: Exception) {

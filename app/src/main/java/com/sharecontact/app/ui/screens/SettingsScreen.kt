@@ -22,9 +22,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sharecontact.app.R
 import com.sharecontact.app.model.AppSettings
 import com.sharecontact.app.model.DefaultCardMode
 import com.sharecontact.app.model.ShareCard
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +40,7 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val githubUrl = stringResource(R.string.github_repo_url)
     var isCustomDropdownExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -312,11 +315,11 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Zero-Permission Cloud & Local Backup",
+                        text = "Data Backup",
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Save or restore your cards and settings directly via Google Drive, OneDrive, or local files using Android's secure Storage Access Framework.",
+                        text = "Export all cards and settings to a backup file, or restore from an existing backup.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -329,7 +332,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Export Backup", fontSize = 13.sp)
+                            Text("Export", fontSize = 14.sp)
                         }
 
                         OutlinedButton(
@@ -338,7 +341,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Restore", fontSize = 13.sp)
+                            Text("Restore", fontSize = 14.sp)
                         }
                     }
                 }
@@ -365,7 +368,7 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                openBrowserUrl(context, "https://github.com/tomba/share_contact_app/issues/new?template=bug_report.md")
+                                openBrowserUrl(context, "$githubUrl/issues/new?template=bug_report.md")
                             }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -386,7 +389,7 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                openBrowserUrl(context, "https://github.com/tomba/share_contact_app/issues/new?template=feature_request.md")
+                                openBrowserUrl(context, "$githubUrl/issues/new?template=feature_request.md")
                             }
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -448,7 +451,7 @@ fun SettingsScreen(
 
                     OutlinedButton(
                         onClick = {
-                            openBrowserUrl(context, "https://github.com/tomba/share_contact_app")
+                            openBrowserUrl(context, githubUrl)
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
