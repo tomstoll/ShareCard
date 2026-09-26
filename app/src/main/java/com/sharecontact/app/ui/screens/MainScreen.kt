@@ -253,7 +253,7 @@ fun MainScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Card / Wi-Fi", fontSize = 14.sp)
+                Text("Add Card", fontSize = 14.sp)
             }
         }
     }

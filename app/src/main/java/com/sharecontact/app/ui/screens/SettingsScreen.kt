@@ -34,7 +34,6 @@ fun SettingsScreen(
     settings: AppSettings,
     cards: List<ShareCard>,
     onUpdateSettings: (AppSettings) -> Unit,
-    onOpenNfcGuide: () -> Unit,
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit,
     onBack: () -> Unit
@@ -264,41 +263,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // NFC Guide Action
-            Text(
-                text = "Hardware & NFC",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(12.dp))
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenNfcGuide() }
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Nfc, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("NFC Guide", fontWeight = FontWeight.Bold)
-                        Text(
-                            "What chips to buy (NTAG215/216) & how to tap with iPhones and Androids",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Backup & Data Portability
             Text(

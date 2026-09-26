@@ -19,12 +19,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import com.sharecontact.app.model.*
 import com.sharecontact.app.util.QrCodeGenerator
 import com.sharecontact.app.util.TagCapacityCalculator
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CardEditorScreen(
     existingCard: ShareCard?,
@@ -222,7 +229,11 @@ fun CardEditorScreen(
                 onValueChange = { title = it },
                 label = { Text("Card Header / Label (e.g., Work Contact)") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -257,15 +268,27 @@ fun CardEditorScreen(
                             value = firstName,
                             onValueChange = { firstName = it },
                             label = { Text("First Name") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { contentType = ContentType.GivenName },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next
+                            )
                         )
                         OutlinedTextField(
                             value = lastName,
                             onValueChange = { lastName = it },
                             label = { Text("Last Name") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { contentType = ContentType.FamilyName },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
 
@@ -277,14 +300,22 @@ fun CardEditorScreen(
                             onValueChange = { organization = it },
                             label = { Text("Company / Organization") },
                             modifier = Modifier.weight(1f),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next
+                            )
                         )
                         OutlinedTextField(
                             value = jobTitle,
                             onValueChange = { jobTitle = it },
                             label = { Text("Job Title") },
                             modifier = Modifier.weight(1f),
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
 
@@ -308,8 +339,14 @@ fun CardEditorScreen(
                                     phones = list
                                 },
                                 label = { Text("${phone.label} Phone") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics { contentType = ContentType.TelephoneNumber },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Phone,
+                                    imeAction = ImeAction.Next
+                                )
                             )
                             if (phones.size > 1) {
                                 IconButton(onClick = {
@@ -346,8 +383,14 @@ fun CardEditorScreen(
                                     emails = list
                                 },
                                 label = { Text("${email.label} Email") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics { contentType = ContentType.EmailAddress },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Next
+                                )
                             )
                             if (emails.size > 1) {
                                 IconButton(onClick = {
@@ -385,7 +428,11 @@ fun CardEditorScreen(
                                 },
                                 label = { Text("Website / URL") },
                                 modifier = Modifier.weight(1f),
-                                singleLine = true
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Uri,
+                                    imeAction = ImeAction.Next
+                                )
                             )
                             if (urls.size > 1) {
                                 IconButton(onClick = {
@@ -410,8 +457,14 @@ fun CardEditorScreen(
                         value = street,
                         onValueChange = { street = it },
                         label = { Text("Street Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentType = ContentType.AddressStreet },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -419,22 +472,40 @@ fun CardEditorScreen(
                             value = city,
                             onValueChange = { city = it },
                             label = { Text("City") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { contentType = ContentType.AddressLocality },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next
+                            )
                         )
                         OutlinedTextField(
                             value = state,
                             onValueChange = { state = it },
                             label = { Text("State") },
-                            modifier = Modifier.weight(0.6f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .semantics { contentType = ContentType.AddressRegion },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Characters,
+                                imeAction = ImeAction.Next
+                            )
                         )
                         OutlinedTextField(
                             value = zip,
                             onValueChange = { zip = it },
                             label = { Text("ZIP") },
-                            modifier = Modifier.weight(0.8f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(0.8f)
+                                .semantics { contentType = ContentType.PostalCode },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            )
                         )
                     }
 
@@ -446,7 +517,10 @@ fun CardEditorScreen(
                         onValueChange = { note = it },
                         label = { Text("Note / Bio") },
                         modifier = Modifier.fillMaxWidth(),
-                        maxLines = 4
+                        maxLines = 4,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        )
                     )
                 }
 
@@ -458,15 +532,24 @@ fun CardEditorScreen(
                         onValueChange = { wifiSsid = it },
                         label = { Text("Network Name (SSID)") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        )
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = wifiPassword,
                         onValueChange = { wifiPassword = it },
                         label = { Text("Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentType = ContentType.Password },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        )
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -484,7 +567,11 @@ fun CardEditorScreen(
                         onValueChange = { rawContent = it },
                         label = { Text("URL (e.g. https://linkedin.com/in/...)") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done
+                        )
                     )
                 }
 
@@ -496,7 +583,10 @@ fun CardEditorScreen(
                         onValueChange = { rawContent = it },
                         label = { Text("Custom text or note") },
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 4
+                        minLines = 4,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        )
                     )
                 }
             }

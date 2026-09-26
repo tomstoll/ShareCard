@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AppSettings(
-    val boostBrightnessOnQr: Boolean = true,
+    val boostBrightnessOnQr: Boolean = false,
     val defaultCardMode: DefaultCardMode = DefaultCardMode.LAST_USED,
     val specificDefaultCardId: String = "",
     val lastViewedCardId: String = "",

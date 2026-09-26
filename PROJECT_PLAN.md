@@ -176,5 +176,5 @@ Existing contact-sharing and digital business card solutions suffer from:
 ## 5. Next Steps
 
 1. Implement **Milestone 3 (Home Screen Widget)** using Jetpack Glance.
-2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap.
+2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap. Note: this will need to only be active when the app is open (not in background or killed, locked/screen off, when the widget is on the home screen, etc.), and should have a toggle in the settings (default is off)
 3. Prepare release build & Play Store assets when ready.

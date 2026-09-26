@@ -189,8 +189,6 @@ class MainActivity : ComponentActivity() {
                                     lifecycleScope.launch {
                                         repository.updateSettings(newSettings)
                                     }
-                                },
-                                onOpenNfcGuide = { currentScreen = Screen.NfcGuide(returnTo = Screen.Settings) },
                                 onExportBackup = {
                                     shareExportFile()
                                 },
