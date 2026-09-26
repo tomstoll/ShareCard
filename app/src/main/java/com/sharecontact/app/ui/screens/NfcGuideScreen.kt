@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,7 +27,7 @@ fun NfcGuideScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("NFC Buyer's Guide & How-To") },
+                title = { Text("NFC Guide") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -64,14 +65,41 @@ fun NfcGuideScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Warning note about sensor placement
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                Icons.Default.WarningAmber,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Important: If placing an NFC sticker on your phone or case, avoid placing it directly over your phone's internal NFC sensor (typically near the camera or center back), as your phone will continuously trigger against its own sticker.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // What to Buy
+            // What Chips to Look For
             Text(
-                text = "What Chips to Buy (Amazon / AliExpress)",
+                text = "What Chips to Look For",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -90,7 +118,7 @@ fun NfcGuideScreen(
                             Text("Recommended: NTAG215 or NTAG216", fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Search for: 'NTAG215 stickers' or 'NTAG215 NFC smart business card' on Amazon or AliExpress. Packs of 10–20 stickers cost only a few dollars.",
+                                "Search for: 'NTAG215 stickers', 'NTAG216 tags', or 'NFC smart business cards'. Blank stickers and plastic cards are very affordable.",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

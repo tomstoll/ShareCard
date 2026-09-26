@@ -1,5 +1,9 @@
 package com.sharecontact.app.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,17 +11,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Contrast
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +37,9 @@ fun SettingsScreen(
     onImportBackup: () -> Unit,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    var isCustomDropdownExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -172,6 +176,86 @@ fun SettingsScreen(
                             Text("Always opens to the top card in your list", style = MaterialTheme.typography.bodySmall)
                         }
                     }
+
+                    // Option 3: Custom Card
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                val targetId = if (settings.specificDefaultCardId.isNotBlank()) {
+                                    settings.specificDefaultCardId
+                                } else {
+                                    cards.firstOrNull()?.id ?: ""
+                                }
+                                onUpdateSettings(settings.copy(
+                                    defaultCardMode = DefaultCardMode.SPECIFIC_CARD,
+                                    specificDefaultCardId = targetId
+                                ))
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = settings.defaultCardMode == DefaultCardMode.SPECIFIC_CARD,
+                            onClick = {
+                                val targetId = if (settings.specificDefaultCardId.isNotBlank()) {
+                                    settings.specificDefaultCardId
+                                } else {
+                                    cards.firstOrNull()?.id ?: ""
+                                }
+                                onUpdateSettings(settings.copy(
+                                    defaultCardMode = DefaultCardMode.SPECIFIC_CARD,
+                                    specificDefaultCardId = targetId
+                                ))
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Custom Card", fontWeight = FontWeight.SemiBold)
+                            Text("Always opens to a specific chosen card", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+
+                    // Custom Card Selector Dropdown (visible when Custom is selected)
+                    if (settings.defaultCardMode == DefaultCardMode.SPECIFIC_CARD && cards.isNotEmpty()) {
+                        val currentSelectedCard = cards.find { it.id == settings.specificDefaultCardId } ?: cards.first()
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(modifier = Modifier.fillMaxWidth().padding(start = 40.dp)) {
+                            OutlinedCard(
+                                onClick = { isCustomDropdownExpanded = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = currentSelectedCard.displayName,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = isCustomDropdownExpanded,
+                                onDismissRequest = { isCustomDropdownExpanded = false }
+                            ) {
+                                cards.forEach { card ->
+                                    DropdownMenuItem(
+                                        text = { Text(card.displayName) },
+                                        onClick = {
+                                            isCustomDropdownExpanded = false
+                                            onUpdateSettings(settings.copy(specificDefaultCardId = card.id))
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -200,14 +284,14 @@ fun SettingsScreen(
                     Icon(Icons.Default.Nfc, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("NFC Buyer's Guide & How-To", fontWeight = FontWeight.Bold)
+                        Text("NFC Guide", fontWeight = FontWeight.Bold)
                         Text(
                             "What chips to buy (NTAG215/216) & how to tap with iPhones and Androids",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -262,6 +346,121 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Support & Feedback Section
+            Text(
+                text = "Support & Feedback",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Report Bug
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                openBrowserUrl(context, "https://github.com/tomba/share_contact_app/issues/new?template=bug_report.md")
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.BugReport, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Report an Issue / Bug", fontWeight = FontWeight.SemiBold)
+                            Text("Submit bug reports securely on GitHub", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Request Feature
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                openBrowserUrl(context, "https://github.com/tomba/share_contact_app/issues/new?template=feature_request.md")
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Request a Feature", fontWeight = FontWeight.SemiBold)
+                            Text("Suggest ideas and improvements", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Rate App
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                Toast.makeText(context, "Ratings will be available when published to the Play Store!", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.StarRate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Rate App", fontWeight = FontWeight.SemiBold)
+                            Text("Play Store link (available upon release)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // About Section
+            Text(
+                text = "About",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("ShareCard v1.0.0", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Created by Thomas Stoll", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text("Open Source under the MIT License", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            openBrowserUrl(context, "https://github.com/tomba/share_contact_app")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("View Source on GitHub", fontSize = 13.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Privacy Audit Card
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -288,5 +487,14 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+private fun openBrowserUrl(context: Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
 }

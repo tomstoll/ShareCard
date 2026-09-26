@@ -104,54 +104,70 @@ Existing contact-sharing and digital business card solutions suffer from:
     - Export the entire database (all cards, custom ordering, custom labels, and all user settings/preferences) as a clean `.json` backup file directly to Google Drive or local storage.
     - Restore from `.json` backup with option to replace or merge existing cards.
 
+### 3.6 Support, Feedback & App Metadata
+- **Privacy-Preserving User Support (No Personal Email Exposure):**
+  - All bug reports, feature suggestions, and discussions are routed directly to the public GitHub repository Issues tracker (`https://github.com/tomba/share_contact_app/issues`).
+  - This avoids publishing a personal email address in the app or store listing, while providing an open, transparent forum for community contributions.
+  - Play Store ratings link via standard Android `market://` intent when the app is published.
+- **About & Licensing:**
+  - **App Name:** ShareCard
+  - **Author:** Thomas Stoll
+  - **License:** MIT License (Open Source)
+  - **Repository:** Hosted on personal GitHub (`https://github.com/tomba/share_contact_app`)
+  - **Core Guarantee:** 100% Offline • Zero Trackers • Zero Accounts • Strict Local Storage
+
 ---
 
 ## 4. Implementation Milestones
 
 ```
 +--------------------------------------------------------------------------+
-| MILESTONE 1: Core Foundation & Single vCard QR                           |
-| - Project initialization (Zero INTERNET, Zero POST_NOTIFICATIONS)        |
-| - DataStore / Room repository for contact card                           |
-| - vCard 3.0 encoder & offline ZXing QR renderer                          |
-| - Main Screen (prominent QR, brightness boost toggle, corner edit icon)  |
-| - Edit Screen (field editing, custom label, live preview & validation)   |
+| MILESTONE 1: Core Foundation & Single vCard QR                   [DONE]  |
+| [x] Project initialization (Zero INTERNET, Zero POST_NOTIFICATIONS)      |
+| [x] DataStore / Room repository for contact card                         |
+| [x] vCard 3.0 encoder & offline ZXing QR renderer                        |
+| [x] Main Screen (prominent QR, brightness boost toggle, corner edit icon)|
+| [x] Edit Screen (field editing, live preview, auto-trim, imePadding)     |
+| [x] Empty state Onboarding Screen (Create Card or Import)                |
 +--------------------------------------------------------------------------+
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| MILESTONE 2: Multi-Card Carousel & Diversified Formats                   |
-| - HorizontalPager with editable card header label & page indicator       |
-| - Card types: vCard, Wi-Fi, URL, Custom Note                             |
-| - Card Manager (Add, Edit, Reorder, Delete)                              |
-| - Settings: Default card on launch (specific card or 'Last Used')        |
+| MILESTONE 2: Multi-Card Carousel & Diversified Formats           [DONE]  |
+| [x] HorizontalPager with editable card header label & page indicator     |
+| [x] Card types: vCard, Wi-Fi, URL, Custom Note                           |
+| [x] Card Manager (Add, Edit, Rearrange with Up/Down buttons, Delete)     |
+| [x] Settings: Default card on launch (Last Used, First Card, or Custom)  |
 +--------------------------------------------------------------------------+
                                     |
                                     v
 +--------------------------------------------------------------------------+
 | MILESTONE 3: Home Screen Widget                                          |
-| - Native Android Home Screen Widget (Jetpack Glance)                     |
-| - Widget configuration activity (card selector)                          |
-| - Tap behavior: Full-screen modal (respects brightness boost setting)    |
+| [ ] Native Android Home Screen Widget (Jetpack Glance)                   |
+| [ ] Widget configuration activity (card selector)                        |
+| [ ] Tap behavior: Full-screen modal (respects brightness boost setting)  |
 +--------------------------------------------------------------------------+
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| MILESTONE 4: NFC Tag Writer & Guide                                      |
-| - Android NFC permission & lifecycle integration                         |
-| - NDEF vCard (`text/vcard`) and URI writer                               |
-| - Byte counter & tag capacity guidance (NTAG213 / 215 / 216)             |
-| - Dedicated in-app "NFC Buying & Usage Guide" info screen                |
-| - Tag write verification & haptic feedback                               |
+| MILESTONE 4: NFC Tag Writer & Guide                              [DONE]  |
+| [x] Android NFC permission & lifecycle integration (0 runtime popups)    |
+| [x] NDEF vCard (`text/vcard`) and URI writer                             |
+| [x] Byte counter & tag capacity guidance (NTAG213 / 215 / 216)           |
+| [x] Dedicated in-app "NFC Guide" info screen (with sensor warning)       |
+| [x] Tag write verification & status feedback                             |
+| [ ] Experimental HCE Phone-to-Phone Emulation                            |
 +--------------------------------------------------------------------------+
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| MILESTONE 5: Polish, Themes & Data Portability                           |
-| - OLED Pure Black & Material You dynamic themes                          |
-| - Individual record export/import (.vcf / .json)                         |
-| - Full app backup & restore (.json)                                      |
-| - F-Droid / Play Store privacy audit (zero trackers, zero permissions)   |
+| MILESTONE 5: Polish, Themes & Data Portability                  [PARTIAL]|
+| [x] OLED Pure Black & Material You dynamic themes                        |
+| [x] Individual record vCard (.vcf) import and parse                      |
+| [x] Full app backup & restore (.json) via Storage Access Framework       |
+| [x] Support & Feedback section (GitHub issue templates)                  |
+| [x] About dialog & metadata (Thomas Stoll, MIT License)                  |
+| [ ] Play Store / F-Droid release packaging                               |
 +--------------------------------------------------------------------------+
 ```
 
@@ -159,6 +175,6 @@ Existing contact-sharing and digital business card solutions suffer from:
 
 ## 5. Next Steps
 
-1. Initialize Android project structure using Gradle with Kotlin DSL and Jetpack Compose.
-2. Configure manifest with zero internet permission and strict privacy guarantees.
-3. Build the core domain models and vCard encoder.
+1. Implement **Milestone 3 (Home Screen Widget)** using Jetpack Glance.
+2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap.
+3. Prepare release build & Play Store assets when ready.

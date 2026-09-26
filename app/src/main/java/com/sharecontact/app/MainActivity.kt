@@ -31,7 +31,7 @@ sealed class Screen {
     object Main : Screen()
     data class Editor(val cardId: String?) : Screen()
     object Settings : Screen()
-    object NfcGuide : Screen()
+    data class NfcGuide(val returnTo: Screen) : Screen()
 }
 
 class MainActivity : ComponentActivity() {
@@ -101,11 +101,12 @@ class MainActivity : ComponentActivity() {
             val settings by repository.settingsFlow.collectAsState()
             var currentScreen by remember { mutableStateOf<Screen>(Screen.Main) }
             var showReorderDialog by remember { mutableStateOf(false) }
+            var showAboutDialog by remember { mutableStateOf(false) }
 
-            // Intercept system back gesture to navigate within the app instead of closing to home screen
+            // Intercept system back gesture to navigate within the app accurately
             BackHandler(enabled = currentScreen != Screen.Main) {
-                currentScreen = when (currentScreen) {
-                    is Screen.NfcGuide -> Screen.Settings
+                currentScreen = when (val s = currentScreen) {
+                    is Screen.NfcGuide -> s.returnTo
                     else -> Screen.Main
                 }
             }
@@ -129,7 +130,8 @@ class MainActivity : ComponentActivity() {
                                     onAddNewCard = { currentScreen = Screen.Editor(null) },
                                     onOpenSettings = { currentScreen = Screen.Settings },
                                     onOpenReorderCards = { showReorderDialog = true },
-                                    onOpenNfcGuide = { currentScreen = Screen.NfcGuide },
+                                    onOpenNfcGuide = { currentScreen = Screen.NfcGuide(returnTo = Screen.Main) },
+                                    onOpenAbout = { showAboutDialog = true },
                                     onOpenNfcWriter = { card ->
                                         if (nfcAdapter == null) {
                                             Toast.makeText(this, "This device does not support NFC", Toast.LENGTH_SHORT).show()
@@ -180,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                         repository.updateSettings(newSettings)
                                     }
                                 },
-                                onOpenNfcGuide = { currentScreen = Screen.NfcGuide },
+                                onOpenNfcGuide = { currentScreen = Screen.NfcGuide(returnTo = Screen.Settings) },
                                 onExportBackup = {
                                     exportBackupLauncher.launch("share_contact_backup.json")
                                 },
@@ -193,7 +195,7 @@ class MainActivity : ComponentActivity() {
 
                         is Screen.NfcGuide -> {
                             NfcGuideScreen(
-                                onBack = { currentScreen = Screen.Settings }
+                                onBack = { currentScreen = screen.returnTo }
                             )
                         }
                     }
@@ -209,6 +211,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onDismiss = { showReorderDialog = false }
+                        )
+                    }
+
+                    // About App Dialog
+                    if (showAboutDialog) {
+                        AboutDialog(
+                            onDismiss = { showAboutDialog = false }
                         )
                     }
 
