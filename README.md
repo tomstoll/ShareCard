@@ -56,8 +56,8 @@ A 100% offline, privacy-first Android app for instantly sharing contact informat
 
 ### Local Build
 ```bash
-git clone https://github.com/tomba/share_contact_app.git
-cd share_contact_app
+git clone https://github.com/tomstoll/ShareCard.git
+cd ShareCard
 ```
 Open the project in Android Studio and click **Run** (or use `./gradlew assembleDebug`).
 

@@ -189,6 +189,7 @@ class MainActivity : ComponentActivity() {
                                     lifecycleScope.launch {
                                         repository.updateSettings(newSettings)
                                     }
+                                },
                                 onExportBackup = {
                                     shareExportFile()
                                 },
