@@ -17,18 +17,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import com.sharecontact.app.model.*
 import com.sharecontact.app.util.QrCodeGenerator
 import com.sharecontact.app.util.TagCapacityCalculator
+import com.sharecontact.app.util.autofill
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CardEditorScreen(
     existingCard: ShareCard?,
@@ -265,7 +268,9 @@ fun CardEditorScreen(
                             value = firstName,
                             onValueChange = { firstName = it },
                             label = { Text("First Name") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .autofill(listOf(AutofillType.PersonFirstName)) { firstName = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -276,7 +281,9 @@ fun CardEditorScreen(
                             value = lastName,
                             onValueChange = { lastName = it },
                             label = { Text("Last Name") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .autofill(listOf(AutofillType.PersonLastName)) { lastName = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -332,7 +339,17 @@ fun CardEditorScreen(
                                     phones = list
                                 },
                                 label = { Text("${phone.label} Phone") },
-                                modifier = Modifier.weight(1f),
+                                placeholder = { Text("+1 (555) 000-0000", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+                                supportingText = if (index == 0) {
+                                    { Text("Tip: Include country code (e.g. +1, +44) for global dialing") }
+                                } else null,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .autofill(listOf(AutofillType.PhoneNumber, AutofillType.PhoneNumberDevice)) { newVal ->
+                                        val list = phones.toMutableList()
+                                        list[index] = phone.copy(value = newVal)
+                                        phones = list
+                                    },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Phone,
@@ -374,7 +391,13 @@ fun CardEditorScreen(
                                     emails = list
                                 },
                                 label = { Text("${email.label} Email") },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .autofill(listOf(AutofillType.EmailAddress)) { newVal ->
+                                        val list = emails.toMutableList()
+                                        list[index] = email.copy(value = newVal)
+                                        emails = list
+                                    },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Email,
@@ -446,7 +469,9 @@ fun CardEditorScreen(
                         value = street,
                         onValueChange = { street = it },
                         label = { Text("Street Address") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .autofill(listOf(AutofillType.AddressStreet, AutofillType.PostalAddress)) { street = it },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Words,
@@ -459,7 +484,9 @@ fun CardEditorScreen(
                             value = city,
                             onValueChange = { city = it },
                             label = { Text("City") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .autofill(listOf(AutofillType.AddressLocality)) { city = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -470,7 +497,9 @@ fun CardEditorScreen(
                             value = state,
                             onValueChange = { state = it },
                             label = { Text("State") },
-                            modifier = Modifier.weight(0.6f),
+                            modifier = Modifier
+                                .weight(0.6f)
+                                .autofill(listOf(AutofillType.AddressRegion)) { state = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Characters,
@@ -481,7 +510,9 @@ fun CardEditorScreen(
                             value = zip,
                             onValueChange = { zip = it },
                             label = { Text("ZIP") },
-                            modifier = Modifier.weight(0.8f),
+                            modifier = Modifier
+                                .weight(0.8f)
+                                .autofill(listOf(AutofillType.PostalCode)) { zip = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
@@ -523,7 +554,9 @@ fun CardEditorScreen(
                         value = wifiPassword,
                         onValueChange = { wifiPassword = it },
                         label = { Text("Password") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .autofill(listOf(AutofillType.Password)) { wifiPassword = it },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,

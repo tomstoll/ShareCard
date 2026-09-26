@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,9 +28,10 @@ import com.sharecontact.app.R
 import com.sharecontact.app.model.AppSettings
 import com.sharecontact.app.model.DefaultCardMode
 import com.sharecontact.app.model.ShareCard
+import com.sharecontact.app.ui.components.LinkActionDialog
 import androidx.compose.ui.res.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
@@ -41,6 +44,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val githubUrl = stringResource(R.string.github_repo_url)
     var isCustomDropdownExpanded by remember { mutableStateOf(false) }
+    var activeLinkDialogInfo by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Scaffold(
         topBar = {
@@ -332,9 +336,14 @@ fun SettingsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                openBrowserUrl(context, "$githubUrl/issues/new?template=bug_report.md")
-                            }
+                            .combinedClickable(
+                                onClick = {
+                                    openBrowserUrl(context, "$githubUrl/issues/new?template=bug_report.md")
+                                },
+                                onLongClick = {
+                                    activeLinkDialogInfo = "Report Bug Link" to "$githubUrl/issues/new?template=bug_report.md"
+                                }
+                            )
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -342,7 +351,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Report an Issue / Bug", fontWeight = FontWeight.SemiBold)
-                            Text("Submit bug reports securely on GitHub", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Submit bug reports securely on GitHub (hold to copy link)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -353,9 +362,14 @@ fun SettingsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                openBrowserUrl(context, "$githubUrl/issues/new?template=feature_request.md")
-                            }
+                            .combinedClickable(
+                                onClick = {
+                                    openBrowserUrl(context, "$githubUrl/issues/new?template=feature_request.md")
+                                },
+                                onLongClick = {
+                                    activeLinkDialogInfo = "Request Feature Link" to "$githubUrl/issues/new?template=feature_request.md"
+                                }
+                            )
                             .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -363,7 +377,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Request a Feature", fontWeight = FontWeight.SemiBold)
-                            Text("Suggest ideas and improvements", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Suggest ideas and improvements (hold to copy link)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -414,15 +428,29 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    OutlinedButton(
-                        onClick = {
-                            openBrowserUrl(context, githubUrl)
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                    OutlinedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {
+                                    openBrowserUrl(context, githubUrl)
+                                },
+                                onLongClick = {
+                                    activeLinkDialogInfo = "GitHub Repository Link" to githubUrl
+                                }
+                            )
                     ) {
-                        Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("View Source on GitHub", fontSize = 13.sp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp, horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("View Source on GitHub", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        }
                     }
                 }
             }
@@ -454,6 +482,14 @@ fun SettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            activeLinkDialogInfo?.let { (title, url) ->
+                LinkActionDialog(
+                    title = title,
+                    url = url,
+                    onDismiss = { activeLinkDialogInfo = null }
+                )
+            }
         }
     }
 }

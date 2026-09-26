@@ -10,8 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -21,8 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sharecontact.app.R
+import com.sharecontact.app.ui.components.LinkActionDialog
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AboutDialog(
     onDismiss: () -> Unit
@@ -30,6 +33,7 @@ fun AboutDialog(
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
     val githubUrl = stringResource(R.string.github_repo_url)
+    var showLinkDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -97,22 +101,44 @@ fun AboutDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedButton(
-                    onClick = {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                        try {
-                            context.startActivity(browserIntent)
-                        } catch (e: Exception) {
-                            // In case no browser is installed
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onClick = {
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                                try {
+                                    context.startActivity(browserIntent)
+                                } catch (e: Exception) {
+                                    // In case no browser is installed
+                                }
+                            },
+                            onLongClick = {
+                                showLinkDialog = true
+                            }
+                        )
                 ) {
-                    Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("View on GitHub", fontSize = 13.sp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp, horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("View on GitHub", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
     )
+
+    if (showLinkDialog) {
+        LinkActionDialog(
+            title = "GitHub Repository Link",
+            url = githubUrl,
+            onDismiss = { showLinkDialog = false }
+        )
+    }
 }
