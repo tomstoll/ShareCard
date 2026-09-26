@@ -61,24 +61,8 @@ class CardRepository private constructor(private val context: Context) {
                 }
             }
             
-            // First time initialization: Create a clean sample card
-            val defaultCard = ShareCard(
-                id = UUID.randomUUID().toString(),
-                title = "💼 My Contact Card",
-                type = CardType.VCARD,
-                firstName = "Your",
-                lastName = "Name",
-                jobTitle = "Software Developer",
-                organization = "My Company",
-                phones = listOf(LabeledItem("Mobile", "555-0199")),
-                emails = listOf(LabeledItem("Work", "hello@example.com")),
-                urls = listOf(LabeledItem("Website", "https://example.com")),
-                address = PostalAddress(city = "San Francisco", state = "CA", country = "USA"),
-                note = "Tap the edit icon to customize this card!"
-            )
-            val initialList = listOf(defaultCard)
-            _cardsFlow.value = initialList
-            saveCardsToFile(initialList)
+            // First time initialization: Start with empty list so user can choose to create or import
+            _cardsFlow.value = emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -102,13 +86,42 @@ class CardRepository private constructor(private val context: Context) {
         }
     }
 
+    private fun trimCard(card: ShareCard): ShareCard {
+        return card.copy(
+            title = card.title.trim(),
+            prefix = card.prefix.trim(),
+            firstName = card.firstName.trim(),
+            middleName = card.middleName.trim(),
+            lastName = card.lastName.trim(),
+            suffix = card.suffix.trim(),
+            organization = card.organization.trim(),
+            jobTitle = card.jobTitle.trim(),
+            phones = card.phones.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            emails = card.emails.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            urls = card.urls.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            address = card.address.copy(
+                street = card.address.street.trim(),
+                city = card.address.city.trim(),
+                state = card.address.state.trim(),
+                zip = card.address.zip.trim(),
+                country = card.address.country.trim()
+            ),
+            note = card.note.trim(),
+            wifiSsid = card.wifiSsid.trim(),
+            wifiPassword = card.wifiPassword.trim(),
+            rawContent = card.rawContent.trim(),
+            updatedAt = System.currentTimeMillis()
+        )
+    }
+
     suspend fun saveCard(card: ShareCard) = withContext(Dispatchers.IO) {
+        val cleanedCard = trimCard(card)
         val current = _cardsFlow.value.toMutableList()
-        val index = current.indexOfFirst { it.id == card.id }
+        val index = current.indexOfFirst { it.id == cleanedCard.id }
         if (index >= 0) {
-            current[index] = card.copy(updatedAt = System.currentTimeMillis())
+            current[index] = cleanedCard
         } else {
-            current.add(card)
+            current.add(cleanedCard)
         }
         _cardsFlow.value = current
         saveCardsToFile(current)

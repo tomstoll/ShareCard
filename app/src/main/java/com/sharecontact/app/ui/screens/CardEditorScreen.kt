@@ -32,7 +32,7 @@ fun CardEditorScreen(
     onDelete: ((String) -> Unit)?,
     onCancel: () -> Unit
 ) {
-    var title by remember { mutableStateOf(existingCard?.title ?: "My Contact Card") }
+    var title by remember { mutableStateOf(existingCard?.title ?: "") }
     var cardType by remember { mutableStateOf(existingCard?.type ?: CardType.VCARD) }
 
     // Contact fields
@@ -78,6 +78,32 @@ fun CardEditorScreen(
 
     // URL / Text field
     var rawContent by remember { mutableStateOf(existingCard?.rawContent ?: "") }
+
+    fun cleanAndSave() {
+        val trimmed = ShareCard(
+            id = existingCard?.id ?: UUID.randomUUID().toString(),
+            title = title.trim(),
+            type = cardType,
+            prefix = prefix.trim(),
+            firstName = firstName.trim(),
+            middleName = middleName.trim(),
+            lastName = lastName.trim(),
+            suffix = suffix.trim(),
+            organization = organization.trim(),
+            jobTitle = jobTitle.trim(),
+            phones = phones.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            emails = emails.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            urls = urls.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
+            address = PostalAddress(street.trim(), city.trim(), state.trim(), zip.trim(), country.trim()),
+            note = note.trim(),
+            wifiSsid = wifiSsid.trim(),
+            wifiPassword = wifiPassword.trim(),
+            wifiSecurity = wifiSecurity,
+            wifiHidden = wifiHidden,
+            rawContent = rawContent.trim()
+        )
+        onSave(trimmed)
+    }
 
     // Form constructed card for live preview & calculation
     val previewCard = remember(
@@ -129,7 +155,7 @@ fun CardEditorScreen(
                             Icon(Icons.Default.Delete, contentDescription = "Delete Card", tint = MaterialTheme.colorScheme.error)
                         }
                     }
-                    IconButton(onClick = { onSave(previewCard) }) {
+                    IconButton(onClick = { cleanAndSave() }) {
                         Icon(Icons.Default.Done, contentDescription = "Save Card", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -140,6 +166,7 @@ fun CardEditorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -477,7 +504,7 @@ fun CardEditorScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { onSave(previewCard) },
+                onClick = { cleanAndSave() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -485,7 +512,8 @@ fun CardEditorScreen(
                 Text("Save Card", fontSize = 16.sp)
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // Generous scrolling space so user can scroll any field well above the keyboard
+            Spacer(modifier = Modifier.height(180.dp))
         }
     }
 

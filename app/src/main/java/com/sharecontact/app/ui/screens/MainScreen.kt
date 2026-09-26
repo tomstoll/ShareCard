@@ -3,7 +3,6 @@ package com.sharecontact.app.ui.screens
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,13 +12,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BrightnessHigh
-import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,9 +32,7 @@ import com.sharecontact.app.model.AppSettings
 import com.sharecontact.app.model.CardType
 import com.sharecontact.app.model.ShareCard
 import com.sharecontact.app.util.QrCodeGenerator
-import com.sharecontact.app.util.VCardBuilder
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,28 +44,12 @@ fun MainScreen(
     onAddNewCard: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenNfcWriter: (ShareCard) -> Unit,
+    onOpenReorderCards: () -> Unit,
+    onOpenNfcGuide: () -> Unit,
     onCardChanged: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    if (cards.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("No contact cards found", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onAddNewCard) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Create Contact Card")
-                }
-            }
-        }
-        return
-    }
+    var showMenu by remember { mutableStateOf(false) }
 
     // Determine initial page
     val initialPage = remember(cards, settings) {
@@ -84,17 +59,16 @@ fun MainScreen(
     }
 
     val pagerState = rememberPagerState(
-        initialPage = initialPage.coerceIn(0, cards.size - 1),
+        initialPage = initialPage.coerceIn(0, (cards.size - 1).coerceAtLeast(0)),
         pageCount = { cards.size }
     )
 
-    val currentCard = cards.getOrNull(pagerState.currentPage) ?: cards.first()
+    val currentCard = cards.getOrNull(pagerState.currentPage) ?: cards.firstOrNull()
 
     // Notify repository of current card change for 'Last Used' memory
-    LaunchedEffect(pagerState.currentPage) {
-        val activeCard = cards.getOrNull(pagerState.currentPage)
-        if (activeCard != null) {
-            onCardChanged(activeCard.id)
+    LaunchedEffect(pagerState.currentPage, currentCard) {
+        if (currentCard != null) {
+            onCardChanged(currentCard.id)
         }
     }
 
@@ -129,32 +103,90 @@ fun MainScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = currentCard.displayName,
+                        text = currentCard?.displayName ?: "ShareCard",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
-                    // NFC Writer Icon
-                    IconButton(onClick = { onOpenNfcWriter(currentCard) }) {
-                        Icon(Icons.Default.Nfc, contentDescription = "Write to NFC")
-                    }
-                    // System Share
-                    IconButton(onClick = {
-                        val payload = QrCodeGenerator.getPayload(currentCard)
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, payload)
-                            type = if (currentCard.type == CardType.VCARD) "text/x-vcard" else "text/plain"
+                    // Prominent "Write NFC" button with explicit text
+                    if (currentCard != null) {
+                        FilledTonalButton(
+                            onClick = { onOpenNfcWriter(currentCard) },
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Nfc,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Write NFC", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
-                        context.startActivity(Intent.createChooser(sendIntent, "Share Card Content"))
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
+
+                        // System Share
+                        IconButton(onClick = {
+                            val payload = QrCodeGenerator.getPayload(currentCard)
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, payload)
+                                type = if (currentCard.type == CardType.VCARD) "text/x-vcard" else "text/plain"
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Share Card Content"))
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share")
+                        }
                     }
-                    // Settings
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+
+                    // Hamburger / Overflow Menu
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            if (currentCard != null) {
+                                DropdownMenuItem(
+                                    text = { Text("Write to NFC Tag") },
+                                    leadingIcon = { Icon(Icons.Default.Nfc, contentDescription = null) },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenNfcWriter(currentCard)
+                                    }
+                                )
+                            }
+                            if (cards.size > 1) {
+                                DropdownMenuItem(
+                                    text = { Text("Rearrange Cards") },
+                                    leadingIcon = { Icon(Icons.Default.SwapVert, contentDescription = null) },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenReorderCards()
+                                    }
+                                )
+                            }
+                            DropdownMenuItem(
+                                text = { Text("NFC Buyer's Guide & How-To") },
+                                leadingIcon = { Icon(Icons.Default.HelpOutline, contentDescription = null) },
+                                onClick = {
+                                    showMenu = false
+                                    onOpenNfcGuide()
+                                }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Settings & Backup") },
+                                leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                onClick = {
+                                    showMenu = false
+                                    onOpenSettings()
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -163,26 +195,28 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                // Quick Brightness Toggle FAB
-                SmallFloatingActionButton(
-                    onClick = { isBrightnessBoosted = !isBrightnessBoosted },
-                    containerColor = if (isBrightnessBoosted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (isBrightnessBoosted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                ) {
-                    Icon(
-                        imageVector = if (isBrightnessBoosted) Icons.Default.BrightnessHigh else Icons.Default.BrightnessMedium,
-                        contentDescription = "Toggle Brightness Boost"
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                // Edit Card FAB
-                FloatingActionButton(
-                    onClick = { onEditCard(currentCard.id) },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit Card")
+            if (currentCard != null) {
+                Column(horizontalAlignment = Alignment.End) {
+                    // Quick Brightness Toggle FAB
+                    SmallFloatingActionButton(
+                        onClick = { isBrightnessBoosted = !isBrightnessBoosted },
+                        containerColor = if (isBrightnessBoosted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (isBrightnessBoosted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    ) {
+                        Icon(
+                            imageVector = if (isBrightnessBoosted) Icons.Default.BrightnessHigh else Icons.Default.BrightnessMedium,
+                            contentDescription = "Toggle Brightness Boost"
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    // Edit Card FAB
+                    FloatingActionButton(
+                        onClick = { onEditCard(currentCard.id) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Card")
+                    }
                 }
             }
         }
@@ -230,20 +264,34 @@ fun MainScreen(
                 }
             }
 
-            // Bottom Add Card link
-            TextButton(
-                onClick = onAddNewCard,
-                modifier = Modifier.padding(bottom = 16.dp)
+            // Bottom controls: Add Card & Reorder link
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Another Card / Wi-Fi", fontSize = 13.sp)
+                TextButton(onClick = onAddNewCard) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Card / Wi-Fi", fontSize = 13.sp)
+                }
+
+                if (cards.size > 1) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(onClick = onOpenReorderCards) {
+                        Icon(Icons.Default.SwapVert, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Rearrange", fontSize = 13.sp)
+                    }
+                }
             }
         }
     }
 
     // Fullscreen QR Modal on tap
-    if (isFullscreenQrOpen) {
+    if (isFullscreenQrOpen && currentCard != null) {
         Dialog(
             onDismissRequest = { isFullscreenQrOpen = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -301,7 +349,7 @@ fun QrCardItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Prominent Card Title
+        // Prominent Card Title / Name Header
         Text(
             text = card.title.ifBlank { card.displayName },
             style = MaterialTheme.typography.headlineMedium,
@@ -310,27 +358,7 @@ fun QrCardItem(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // Card Type Subtitle / Badge
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.padding(bottom = 20.dp)
-        ) {
-            val typeText = when (card.type) {
-                CardType.VCARD -> "vCard 3.0 Contact"
-                CardType.WIFI -> "Wi-Fi Network"
-                CardType.URL -> "Web Link"
-                CardType.TEXT -> "Plain Note"
-            }
-            Text(
-                text = typeText,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-            )
-        }
+        Spacer(modifier = Modifier.height(20.dp))
 
         // High-Contrast QR Code Card
         Card(

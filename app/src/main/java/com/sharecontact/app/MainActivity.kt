@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import com.sharecontact.app.model.ShareCard
 import com.sharecontact.app.ui.screens.*
 import com.sharecontact.app.ui.theme.ShareContactAppTheme
 import com.sharecontact.app.util.NfcWriter
+import com.sharecontact.app.util.VCardParser
 import kotlinx.coroutines.launch
 
 sealed class Screen {
@@ -59,24 +61,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Storage Access Framework: Restore Full Backup
+    // Storage Access Framework: Restore Full Backup or Import vCard
     private val importBackupLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
             try {
-                val jsonContent = contentResolver.openInputStream(uri)?.use { stream ->
+                val fileContent = contentResolver.openInputStream(uri)?.use { stream ->
                     stream.bufferedReader().use { it.readText() }
                 }
-                if (!jsonContent.isNullOrBlank()) {
+                if (!fileContent.isNullOrBlank()) {
                     lifecycleScope.launch {
-                        repository.importFullBackupJson(jsonContent, merge = false)
-                        Toast.makeText(this@MainActivity, "Backup restored successfully!", Toast.LENGTH_SHORT).show()
+                        if (fileContent.contains("BEGIN:VCARD")) {
+                            // Single vCard file import
+                            val importedCard = VCardParser.parse(fileContent)
+                            repository.saveCard(importedCard)
+                            Toast.makeText(this@MainActivity, "Imported '${importedCard.displayName}'!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Full JSON app backup import
+                            repository.importFullBackupJson(fileContent, merge = false)
+                            Toast.makeText(this@MainActivity, "Backup restored successfully!", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                Toast.makeText(this, "Failed to restore backup: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Failed to import file: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -90,33 +100,53 @@ class MainActivity : ComponentActivity() {
             val cards by repository.cardsFlow.collectAsState()
             val settings by repository.settingsFlow.collectAsState()
             var currentScreen by remember { mutableStateOf<Screen>(Screen.Main) }
+            var showReorderDialog by remember { mutableStateOf(false) }
+
+            // Intercept system back gesture to navigate within the app instead of closing to home screen
+            BackHandler(enabled = currentScreen != Screen.Main) {
+                currentScreen = when (currentScreen) {
+                    is Screen.NfcGuide -> Screen.Settings
+                    else -> Screen.Main
+                }
+            }
 
             ShareContactAppTheme(useOledBlack = settings.useOledBlack) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (val screen = currentScreen) {
                         is Screen.Main -> {
-                            MainScreen(
-                                cards = cards,
-                                settings = settings,
-                                onEditCard = { id -> currentScreen = Screen.Editor(id) },
-                                onAddNewCard = { currentScreen = Screen.Editor(null) },
-                                onOpenSettings = { currentScreen = Screen.Settings },
-                                onOpenNfcWriter = { card ->
-                                    if (nfcAdapter == null) {
-                                        Toast.makeText(this, "This device does not support NFC", Toast.LENGTH_SHORT).show()
-                                    } else if (!nfcAdapter!!.isEnabled) {
-                                        Toast.makeText(this, "Please enable NFC in system settings", Toast.LENGTH_LONG).show()
-                                    } else {
-                                        nfcTargetCard = card
-                                        nfcWriteState = NfcWriteState.WaitingForTag
+                            if (cards.isEmpty()) {
+                                OnboardingScreen(
+                                    onCreateCard = { currentScreen = Screen.Editor(null) },
+                                    onImportBackup = {
+                                        importBackupLauncher.launch(arrayOf("application/json", "text/x-vcard", "text/vcard", "*/*"))
                                     }
-                                },
-                                onCardChanged = { cardId ->
-                                    lifecycleScope.launch {
-                                        repository.setLastViewedCard(cardId)
+                                )
+                            } else {
+                                MainScreen(
+                                    cards = cards,
+                                    settings = settings,
+                                    onEditCard = { id -> currentScreen = Screen.Editor(id) },
+                                    onAddNewCard = { currentScreen = Screen.Editor(null) },
+                                    onOpenSettings = { currentScreen = Screen.Settings },
+                                    onOpenReorderCards = { showReorderDialog = true },
+                                    onOpenNfcGuide = { currentScreen = Screen.NfcGuide },
+                                    onOpenNfcWriter = { card ->
+                                        if (nfcAdapter == null) {
+                                            Toast.makeText(this, "This device does not support NFC", Toast.LENGTH_SHORT).show()
+                                        } else if (!nfcAdapter!!.isEnabled) {
+                                            Toast.makeText(this, "Please enable NFC in system settings", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            nfcTargetCard = card
+                                            nfcWriteState = NfcWriteState.WaitingForTag
+                                        }
+                                    },
+                                    onCardChanged = { cardId ->
+                                        lifecycleScope.launch {
+                                            repository.setLastViewedCard(cardId)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
 
                         is Screen.Editor -> {
@@ -155,7 +185,7 @@ class MainActivity : ComponentActivity() {
                                     exportBackupLauncher.launch("share_contact_backup.json")
                                 },
                                 onImportBackup = {
-                                    importBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                                    importBackupLauncher.launch(arrayOf("application/json", "text/x-vcard", "text/vcard", "*/*"))
                                 },
                                 onBack = { currentScreen = Screen.Main }
                             )
@@ -166,6 +196,20 @@ class MainActivity : ComponentActivity() {
                                 onBack = { currentScreen = Screen.Settings }
                             )
                         }
+                    }
+
+                    // Rearrange Cards Modal Bottom Sheet
+                    if (showReorderDialog && cards.size > 1) {
+                        ReorderCardsDialog(
+                            initialCards = cards,
+                            onSaveOrder = { reorderedList ->
+                                lifecycleScope.launch {
+                                    repository.reorderCards(reorderedList)
+                                    showReorderDialog = false
+                                }
+                            },
+                            onDismiss = { showReorderDialog = false }
+                        )
                     }
 
                     // NFC Write Bottom Sheet / Modal
