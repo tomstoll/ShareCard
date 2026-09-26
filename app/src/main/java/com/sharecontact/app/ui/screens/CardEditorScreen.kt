@@ -19,10 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,7 +28,7 @@ import com.sharecontact.app.util.QrCodeGenerator
 import com.sharecontact.app.util.TagCapacityCalculator
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardEditorScreen(
     existingCard: ShareCard?,
@@ -268,9 +265,7 @@ fun CardEditorScreen(
                             value = firstName,
                             onValueChange = { firstName = it },
                             label = { Text("First Name") },
-                            modifier = Modifier
-                                .weight(1f)
-                                .semantics { contentType = ContentType.GivenName },
+                            modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -281,9 +276,7 @@ fun CardEditorScreen(
                             value = lastName,
                             onValueChange = { lastName = it },
                             label = { Text("Last Name") },
-                            modifier = Modifier
-                                .weight(1f)
-                                .semantics { contentType = ContentType.FamilyName },
+                            modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -339,9 +332,7 @@ fun CardEditorScreen(
                                     phones = list
                                 },
                                 label = { Text("${phone.label} Phone") },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics { contentType = ContentType.TelephoneNumber },
+                                modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Phone,
@@ -383,9 +374,7 @@ fun CardEditorScreen(
                                     emails = list
                                 },
                                 label = { Text("${email.label} Email") },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics { contentType = ContentType.EmailAddress },
+                                modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Email,
@@ -457,9 +446,7 @@ fun CardEditorScreen(
                         value = street,
                         onValueChange = { street = it },
                         label = { Text("Street Address") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { contentType = ContentType.AddressStreet },
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Words,
@@ -472,9 +459,7 @@ fun CardEditorScreen(
                             value = city,
                             onValueChange = { city = it },
                             label = { Text("City") },
-                            modifier = Modifier
-                                .weight(1f)
-                                .semantics { contentType = ContentType.AddressLocality },
+                            modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -485,9 +470,7 @@ fun CardEditorScreen(
                             value = state,
                             onValueChange = { state = it },
                             label = { Text("State") },
-                            modifier = Modifier
-                                .weight(0.6f)
-                                .semantics { contentType = ContentType.AddressRegion },
+                            modifier = Modifier.weight(0.6f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Characters,
@@ -498,9 +481,7 @@ fun CardEditorScreen(
                             value = zip,
                             onValueChange = { zip = it },
                             label = { Text("ZIP") },
-                            modifier = Modifier
-                                .weight(0.8f)
-                                .semantics { contentType = ContentType.PostalCode },
+                            modifier = Modifier.weight(0.8f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
@@ -542,9 +523,7 @@ fun CardEditorScreen(
                         value = wifiPassword,
                         onValueChange = { wifiPassword = it },
                         label = { Text("Password") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { contentType = ContentType.Password },
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
