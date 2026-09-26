@@ -246,7 +246,7 @@ fun CardEditorScreen(
                     CardType.VCARD to "Contact",
                     CardType.WIFI to "Wi-Fi",
                     CardType.URL to "Web Link",
-                    CardType.TEXT to "Plain Text"
+                    CardType.TEXT to "Text"
                 ).forEach { (type, label) ->
                     FilterChip(
                         selected = cardType == type,
