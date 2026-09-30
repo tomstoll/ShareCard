@@ -270,7 +270,7 @@ fun CardEditorScreen(
                             label = { Text("First Name") },
                             modifier = Modifier
                                 .weight(1f)
-                                .autofill(listOf(AutofillType.PersonFirstName)) { firstName = it },
+                                .autofill(listOf(AutofillType.PersonFirstName, AutofillType.PersonFullName)) { firstName = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -283,7 +283,7 @@ fun CardEditorScreen(
                             label = { Text("Last Name") },
                             modifier = Modifier
                                 .weight(1f)
-                                .autofill(listOf(AutofillType.PersonLastName)) { lastName = it },
+                                .autofill(listOf(AutofillType.PersonLastName, AutofillType.PersonFullName)) { lastName = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -340,9 +340,42 @@ fun CardEditorScreen(
                                 },
                                 label = { Text("${phone.label} Phone") },
                                 placeholder = { Text("+1 (555) 000-0000", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
-                                supportingText = if (index == 0) {
-                                    { Text("Tip: Include country code (e.g. +1, +44) for global dialing") }
-                                } else null,
+                                leadingIcon = {
+                                    IconButton(
+                                        onClick = {
+                                            val current = phone.value.trim()
+                                            val updated = if (current.startsWith("+")) current else "+$current"
+                                            val list = phones.toMutableList()
+                                            list[index] = phone.copy(value = updated)
+                                            phones = list
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "+",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 22.sp,
+                                            color = if (phone.value.startsWith("+")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                supportingText = {
+                                    val cleanDigits = phone.value.filter { it.isDigit() }
+                                    if (phone.value.isNotBlank()) {
+                                        if (!phone.value.startsWith("+")) {
+                                            if (cleanDigits.length == 10) {
+                                                Text("10 digits: tap '+' to format as international (e.g. +1)")
+                                            } else if (cleanDigits.length == 11 && cleanDigits.startsWith("1")) {
+                                                Text("Tap '+' to format with US/CA code (+1)")
+                                            } else {
+                                                Text("Tap '+' button or hold '0' for country code")
+                                            }
+                                        } else {
+                                            Text("✓ International code included", color = MaterialTheme.colorScheme.primary)
+                                        }
+                                    } else if (index == 0) {
+                                        Text("Tip: Tap '+' button or hold '0' on dial pad for country code")
+                                    }
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .autofill(listOf(AutofillType.PhoneNumber, AutofillType.PhoneNumberDevice)) { newVal ->
