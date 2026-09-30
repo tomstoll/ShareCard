@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
@@ -26,10 +27,20 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import com.sharecontact.app.model.*
+import com.sharecontact.app.ui.components.CountryPickerDialog
+import com.sharecontact.app.util.Country
+import com.sharecontact.app.util.CountryCodeHelper
 import com.sharecontact.app.util.QrCodeGenerator
 import com.sharecontact.app.util.TagCapacityCalculator
 import com.sharecontact.app.util.autofill
 import java.util.UUID
+
+data class PhoneFieldItem(
+    val id: String = UUID.randomUUID().toString(),
+    val label: String = "Mobile",
+    val country: Country,
+    val nationalNumber: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -51,12 +62,27 @@ fun CardEditorScreen(
     var organization by remember { mutableStateOf(existingCard?.organization ?: "") }
     var jobTitle by remember { mutableStateOf(existingCard?.jobTitle ?: "") }
 
-    var phones by remember {
+    var phoneItems by remember {
+        val initialList = existingCard?.phones?.ifEmpty { listOf(LabeledItem("Mobile", "")) }
+            ?: listOf(LabeledItem("Mobile", ""))
         mutableStateOf(
-            existingCard?.phones?.ifEmpty { listOf(LabeledItem("Mobile", "")) }
-                ?: listOf(LabeledItem("Mobile", ""))
+            initialList.map { item ->
+                val (country, national) = CountryCodeHelper.parsePhoneNumber(item.value)
+                PhoneFieldItem(label = item.label, country = country, nationalNumber = national)
+            }
         )
     }
+
+    val phones = remember(phoneItems) {
+        phoneItems.map { item ->
+            LabeledItem(
+                label = item.label,
+                value = CountryCodeHelper.formatFullNumber(item.country, item.nationalNumber)
+            )
+        }
+    }
+
+    var activeCountryPickerIndex by remember { mutableStateOf<Int?>(null) }
     var emails by remember {
         mutableStateOf(
             existingCard?.emails?.ifEmpty { listOf(LabeledItem("Personal", "")) }
@@ -323,65 +349,93 @@ fun CardEditorScreen(
 
                     // Phone numbers
                     Text("Phone Numbers", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    phones.forEachIndexed { index, phone ->
+                    phoneItems.forEachIndexed { index, phoneItem ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.Top
                         ) {
+                            // Country selector chip / button
+                            OutlinedCard(
+                                onClick = { activeCountryPickerIndex = index },
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.outlinedCardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .padding(horizontal = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(phoneItem.country.flagEmoji, fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        phoneItem.country.dialCode,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        contentDescription = "Change country code",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
                             OutlinedTextField(
-                                value = phone.value,
+                                value = phoneItem.nationalNumber,
                                 onValueChange = { newVal ->
-                                    val list = phones.toMutableList()
-                                    list[index] = phone.copy(value = newVal)
-                                    phones = list
-                                },
-                                label = { Text("${phone.label} Phone") },
-                                placeholder = { Text("+1 (555) 000-0000", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
-                                leadingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            val current = phone.value.trim()
-                                            val updated = if (current.startsWith("+")) current else "+$current"
-                                            val list = phones.toMutableList()
-                                            list[index] = phone.copy(value = updated)
-                                            phones = list
-                                        }
-                                    ) {
-                                        Text(
-                                            text = "+",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 22.sp,
-                                            color = if (phone.value.startsWith("+")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                    val trimmed = newVal.trim()
+                                    val list = phoneItems.toMutableList()
+                                    if (trimmed.startsWith("+")) {
+                                        val (detectedCountry, detectedNational) = CountryCodeHelper.parsePhoneNumber(trimmed)
+                                        list[index] = phoneItem.copy(country = detectedCountry, nationalNumber = detectedNational)
+                                    } else if (trimmed.length == 11 && trimmed.startsWith("1") && phoneItem.country.dialCode == "+1") {
+                                        list[index] = phoneItem.copy(nationalNumber = CountryCodeHelper.formatUsCaNumber(trimmed.substring(1)))
+                                    } else {
+                                        val formatted = if (phoneItem.country.dialCode == "+1") CountryCodeHelper.formatUsCaNumber(newVal) else newVal
+                                        list[index] = phoneItem.copy(nationalNumber = formatted)
                                     }
+                                    phoneItems = list
+                                },
+                                label = { Text("${phoneItem.label} Phone") },
+                                placeholder = {
+                                    Text(
+                                        if (phoneItem.country.dialCode == "+1") "(555) 000-0000" else "Phone number",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
                                 },
                                 supportingText = {
-                                    val cleanDigits = phone.value.filter { it.isDigit() }
-                                    if (phone.value.isNotBlank()) {
-                                        if (!phone.value.startsWith("+")) {
-                                            if (cleanDigits.length == 10) {
-                                                Text("10 digits: tap '+' to format as international (e.g. +1)")
-                                            } else if (cleanDigits.length == 11 && cleanDigits.startsWith("1")) {
-                                                Text("Tap '+' to format with US/CA code (+1)")
-                                            } else {
-                                                Text("Tap '+' button or hold '0' for country code")
-                                            }
-                                        } else {
-                                            Text("✓ International code included", color = MaterialTheme.colorScheme.primary)
-                                        }
-                                    } else if (index == 0) {
-                                        Text("Tip: Tap '+' button or hold '0' on dial pad for country code")
+                                    if (phoneItem.nationalNumber.isNotBlank()) {
+                                        val fullNum = CountryCodeHelper.formatFullNumber(phoneItem.country, phoneItem.nationalNumber)
+                                        Text("✓ Full: $fullNum", color = MaterialTheme.colorScheme.primary)
+                                    } else {
+                                        Text("Dial code ${phoneItem.country.dialCode} will be included")
                                     }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
                                     .autofill(listOf(AutofillType.PhoneNumber, AutofillType.PhoneNumberDevice)) { newVal ->
-                                        val list = phones.toMutableList()
-                                        list[index] = phone.copy(value = newVal)
-                                        phones = list
+                                        val trimmed = newVal.trim()
+                                        val list = phoneItems.toMutableList()
+                                        if (trimmed.startsWith("+")) {
+                                            val (detectedCountry, detectedNational) = CountryCodeHelper.parsePhoneNumber(trimmed)
+                                            list[index] = phoneItem.copy(country = detectedCountry, nationalNumber = detectedNational)
+                                        } else {
+                                            val formatted = if (phoneItem.country.dialCode == "+1") CountryCodeHelper.formatUsCaNumber(newVal) else newVal
+                                            list[index] = phoneItem.copy(nationalNumber = formatted)
+                                        }
+                                        phoneItems = list
                                     },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
@@ -389,16 +443,32 @@ fun CardEditorScreen(
                                     imeAction = ImeAction.Next
                                 )
                             )
-                            if (phones.size > 1) {
-                                IconButton(onClick = {
-                                    phones = phones.toMutableList().apply { removeAt(index) }
-                                }) {
+
+                            if (phoneItems.size > 1) {
+                                IconButton(
+                                    onClick = {
+                                        phoneItems = phoneItems.toMutableList().apply { removeAt(index) }
+                                    },
+                                    modifier = Modifier.padding(top = 8.dp)
+                                ) {
                                     Icon(Icons.Default.Delete, contentDescription = "Remove")
                                 }
                             }
                         }
                     }
-                    TextButton(onClick = { phones = phones + LabeledItem("Mobile", "") }) {
+                    TextButton(onClick = {
+                        val nextLabel = when (phoneItems.size) {
+                            0 -> "Mobile"
+                            1 -> "Work"
+                            2 -> "Home"
+                            else -> "Other"
+                        }
+                        phoneItems = phoneItems + PhoneFieldItem(
+                            label = nextLabel,
+                            country = CountryCodeHelper.getDefaultCountry(),
+                            nationalNumber = ""
+                        )
+                    }) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Add Phone Number")
@@ -673,5 +743,20 @@ fun CardEditorScreen(
                 }
             }
         )
+    }
+
+    activeCountryPickerIndex?.let { pickerIdx ->
+        val currentItem = phoneItems.getOrNull(pickerIdx)
+        if (currentItem != null) {
+            CountryPickerDialog(
+                selectedCountry = currentItem.country,
+                onSelectCountry = { newCountry ->
+                    val list = phoneItems.toMutableList()
+                    list[pickerIdx] = currentItem.copy(country = newCountry)
+                    phoneItems = list
+                },
+                onDismissRequest = { activeCountryPickerIndex = null }
+            )
+        }
     }
 }
