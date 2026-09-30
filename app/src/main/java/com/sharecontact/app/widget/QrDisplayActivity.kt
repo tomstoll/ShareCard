@@ -1,17 +1,22 @@
 package com.sharecontact.app.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BrightnessHigh
 import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Close
@@ -29,12 +34,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.lifecycle.lifecycleScope
 import com.sharecontact.app.MainActivity
 import com.sharecontact.app.data.CardRepository
 import com.sharecontact.app.model.CardType
 import com.sharecontact.app.ui.screens.QrCodeImage
 import com.sharecontact.app.ui.theme.ShareContactAppTheme
 import com.sharecontact.app.util.QrCodeGenerator
+import kotlinx.coroutines.launch
 
 class QrDisplayActivity : ComponentActivity() {
 
@@ -56,7 +65,12 @@ class QrDisplayActivity : ComponentActivity() {
             window.attributes = lp
         }
 
-        val cardId = intent?.getStringExtra(EXTRA_CARD_ID)
+        val initialCardId = intent?.getStringExtra(EXTRA_CARD_ID)
+        val appWidgetId = intent?.getIntExtra(
+            AppWidgetManager.EXTRA_APPWIDGET_ID,
+            AppWidgetManager.INVALID_APPWIDGET_ID
+        ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+
         val repository = CardRepository.getInstance(applicationContext)
 
         // Apply screen brightness boost if enabled in settings
@@ -70,6 +84,8 @@ class QrDisplayActivity : ComponentActivity() {
         setContent {
             val cards by repository.cardsFlow.collectAsState()
             val currentSettings by repository.settingsFlow.collectAsState()
+            var currentCardId by remember { mutableStateOf(initialCardId) }
+            var showCardSwitchDialog by remember { mutableStateOf(false) }
             var isBrightnessBoosted by remember { mutableStateOf(currentSettings.boostBrightnessOnQr) }
 
             LaunchedEffect(isBrightnessBoosted) {
@@ -78,7 +94,9 @@ class QrDisplayActivity : ComponentActivity() {
                 window.attributes = lp
             }
 
-            val card = cards.find { it.id == cardId } ?: cards.firstOrNull()
+            val card = cards.find { it.id == currentCardId }
+                ?: cards.find { it.id == initialCardId }
+                ?: cards.firstOrNull()
 
             ShareContactAppTheme(useOledBlack = currentSettings.useOledBlack) {
                 // Outer transparent container: tapping outside card dismisses dialog to home screen
@@ -92,13 +110,6 @@ class QrDisplayActivity : ComponentActivity() {
                     contentAlignment = Alignment.Center
                 ) {
                     if (card != null) {
-                        val typeIcon = when (card.type) {
-                            CardType.VCARD -> "📇"
-                            CardType.WIFI -> "📶"
-                            CardType.URL -> "🔗"
-                            CardType.TEXT -> "📝"
-                        }
-
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth(0.88f)
@@ -116,26 +127,39 @@ class QrDisplayActivity : ComponentActivity() {
                                     .padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Title Header with Close Button
+                                // Title Header: Tap name to switch card, close button on right
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
+                                    Surface(
+                                        onClick = { showCardSwitchDialog = true },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.Transparent,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     ) {
-                                        Text(typeIcon, fontSize = 22.sp)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = card.displayName,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = card.displayName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Switch Card",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
                                     }
+
                                     IconButton(
                                         onClick = { finish() },
                                         modifier = Modifier.size(36.dp)
@@ -237,6 +261,132 @@ class QrDisplayActivity : ComponentActivity() {
                             }
                         }
                     }
+                }
+
+                // Card Selection Dialog (same style as initial widget placement)
+                if (showCardSwitchDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showCardSwitchDialog = false },
+                        title = {
+                            Text(
+                                text = "Select Widget Card",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            if (cards.isEmpty()) {
+                                Text(
+                                    text = "No cards available.",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 380.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    items(cards, key = { it.id }) { item ->
+                                        val isSelected = item.id == card?.id
+                                        val itemTypeLabel = when (item.type) {
+                                            CardType.VCARD -> "Contact Card"
+                                            CardType.WIFI -> "Wi-Fi Network"
+                                            CardType.URL -> "Web Link"
+                                            CardType.TEXT -> "Text"
+                                        }
+
+                                        OutlinedCard(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    currentCardId = item.id
+                                                    showCardSwitchDialog = false
+
+                                                    // Update widget preferences & Glance state if launched from a widget
+                                                    if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                                                        WidgetPreferences.saveWidgetCardId(
+                                                            this@QrDisplayActivity,
+                                                            appWidgetId,
+                                                            item.id
+                                                        )
+                                                        lifecycleScope.launch {
+                                                            try {
+                                                                val glanceManager = GlanceAppWidgetManager(this@QrDisplayActivity)
+                                                                val glanceId = glanceManager.getGlanceIdBy(appWidgetId)
+                                                                updateAppWidgetState(this@QrDisplayActivity, glanceId) { prefs ->
+                                                                    prefs[WidgetPreferences.CARD_ID_KEY] = item.id
+                                                                }
+                                                                ShareCardWidget().update(this@QrDisplayActivity, glanceId)
+                                                            } catch (e: Exception) {
+                                                                e.printStackTrace()
+                                                            }
+                                                            WidgetUpdater.updateAll(this@QrDisplayActivity)
+                                                        }
+                                                    } else {
+                                                        WidgetUpdater.updateAll(this@QrDisplayActivity)
+                                                    }
+                                                },
+                                            shape = RoundedCornerShape(14.dp),
+                                            colors = if (isSelected) {
+                                                CardDefaults.outlinedCardColors(
+                                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                                                )
+                                            } else {
+                                                CardDefaults.outlinedCardColors()
+                                            },
+                                            border = if (isSelected) {
+                                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                                            } else {
+                                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                            }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(54.dp)
+                                                        .background(Color.White, RoundedCornerShape(8.dp))
+                                                        .padding(4.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    QrCodeImage(
+                                                        content = QrCodeGenerator.getPayload(item),
+                                                        modifier = Modifier.fillMaxSize()
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = item.displayName,
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    Text(
+                                                        text = itemTypeLabel,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        confirmButton = {},
+                        dismissButton = {
+                            TextButton(onClick = { showCardSwitchDialog = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
             }
         }

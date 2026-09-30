@@ -76,13 +76,9 @@ private fun WidgetBody(context: Context, card: ShareCard?, appWidgetId: Int) {
             action = Intent.ACTION_VIEW
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
             putExtra(QrDisplayActivity.EXTRA_CARD_ID, card.id)
-        }
-
-        val typeIcon = when (card.type) {
-            CardType.VCARD -> "📇"
-            CardType.WIFI -> "📶"
-            CardType.URL -> "🔗"
-            CardType.TEXT -> "📝"
+            if (appWidgetId != -1) {
+                putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            }
         }
 
         Box(
@@ -105,7 +101,7 @@ private fun WidgetBody(context: Context, card: ShareCard?, appWidgetId: Int) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$typeIcon ${card.displayName}",
+                        text = card.displayName,
                         style = TextStyle(
                             color = ColorProvider(Color.White),
                             fontSize = 13.sp,
