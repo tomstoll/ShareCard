@@ -12,11 +12,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrightnessHigh
+import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,6 +70,13 @@ class QrDisplayActivity : ComponentActivity() {
         setContent {
             val cards by repository.cardsFlow.collectAsState()
             val currentSettings by repository.settingsFlow.collectAsState()
+            var isBrightnessBoosted by remember { mutableStateOf(currentSettings.boostBrightnessOnQr) }
+
+            LaunchedEffect(isBrightnessBoosted) {
+                val lp = window.attributes
+                lp.screenBrightness = if (isBrightnessBoosted) 1.0f else -1f
+                window.attributes = lp
+            }
 
             val card = cards.find { it.id == cardId } ?: cards.firstOrNull()
 
@@ -151,18 +163,12 @@ class QrDisplayActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Bottom Actions: "Tap to dismiss" hint & "Open in App"
+                                // Bottom Actions: "Open in App" (left) & Brightness Toggle (right)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "Tap outside to close",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-
                                     TextButton(
                                         onClick = {
                                             val appIntent = Intent(this@QrDisplayActivity, MainActivity::class.java).apply {
@@ -174,6 +180,29 @@ class QrDisplayActivity : ComponentActivity() {
                                         }
                                     ) {
                                         Text("Open App")
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { isBrightnessBoosted = !isBrightnessBoosted },
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            containerColor = if (isBrightnessBoosted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isBrightnessBoosted) Icons.Default.BrightnessHigh else Icons.Default.BrightnessMedium,
+                                            contentDescription = "Toggle Brightness",
+                                            modifier = Modifier.size(18.dp),
+                                            tint = if (isBrightnessBoosted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (isBrightnessBoosted) "Boosted" else "Boost",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isBrightnessBoosted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 }
                             }
