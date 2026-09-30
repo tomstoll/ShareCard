@@ -55,7 +55,11 @@ object VCardBuilder {
             val trimmedVal = item.value.trim()
             if (trimmedVal.isNotBlank()) {
                 val type = mapEmailType(item.label)
-                sb.append("EMAIL;TYPE=").append(type).append(":").append(escape(trimmedVal)).append("\n")
+                if (type != null) {
+                    sb.append("EMAIL;TYPE=").append(type).append(":").append(escape(trimmedVal)).append("\n")
+                } else {
+                    sb.append("EMAIL:").append(escape(trimmedVal)).append("\n")
+                }
             }
         }
 
@@ -107,11 +111,13 @@ object VCardBuilder {
         }
     }
 
-    private fun mapEmailType(label: String): String {
+    private fun mapEmailType(label: String): String? {
         return when (label.trim().lowercase()) {
-            "work" -> "WORK,INTERNET"
-            "home" -> "HOME,INTERNET"
-            else -> "INTERNET"
+            "work" -> "WORK"
+            "home", "personal" -> "HOME"
+            "other" -> "OTHER"
+            "", "email" -> null
+            else -> label.trim().uppercase()
         }
     }
 }
