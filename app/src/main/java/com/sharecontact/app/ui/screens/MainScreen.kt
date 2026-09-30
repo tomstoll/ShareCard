@@ -41,6 +41,8 @@ import kotlinx.coroutines.withContext
 fun MainScreen(
     cards: List<ShareCard>,
     settings: AppSettings,
+    targetCardId: String? = null,
+    openFullscreenQr: Boolean = false,
     onEditCard: (String) -> Unit,
     onAddNewCard: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -53,14 +55,18 @@ fun MainScreen(
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
 
-    // Determine initial page based on setting
-    val initialPage = remember(cards, settings) {
-        val targetId = when (settings.defaultCardMode) {
+    // Determine initial page based on target card or settings
+    val initialPage = remember(cards, settings, targetCardId) {
+        if (!targetCardId.isNullOrBlank()) {
+            val idx = cards.indexOfFirst { it.id == targetCardId }
+            if (idx >= 0) return@remember idx
+        }
+        val defaultId = when (settings.defaultCardMode) {
             DefaultCardMode.FIRST_CARD -> cards.firstOrNull()?.id ?: ""
             DefaultCardMode.SPECIFIC_CARD -> settings.specificDefaultCardId
             DefaultCardMode.LAST_USED -> settings.lastViewedCardId
         }
-        val idx = cards.indexOfFirst { it.id == targetId }
+        val idx = cards.indexOfFirst { it.id == defaultId }
         if (idx >= 0) idx else 0
     }
 
@@ -69,7 +75,26 @@ fun MainScreen(
         pageCount = { cards.size }
     )
 
+    // Scroll to target card if requested via widget/intent while running
+    LaunchedEffect(targetCardId) {
+        if (!targetCardId.isNullOrBlank()) {
+            val idx = cards.indexOfFirst { it.id == targetCardId }
+            if (idx >= 0 && idx != pagerState.currentPage) {
+                pagerState.scrollToPage(idx)
+            }
+        }
+    }
+
     val currentCard = cards.getOrNull(pagerState.currentPage) ?: cards.firstOrNull()
+
+    // Fullscreen QR Modal state
+    var isFullscreenQrOpen by remember { mutableStateOf(openFullscreenQr) }
+
+    LaunchedEffect(openFullscreenQr) {
+        if (openFullscreenQr) {
+            isFullscreenQrOpen = true
+        }
+    }
 
     // Notify repository of current card change for 'Last Used' memory
     LaunchedEffect(pagerState.currentPage, currentCard) {
@@ -77,9 +102,6 @@ fun MainScreen(
             onCardChanged(currentCard.id)
         }
     }
-
-    // Fullscreen QR Modal state
-    var isFullscreenQrOpen by remember { mutableStateOf(false) }
 
     // Screen brightness control
     var isBrightnessBoosted by remember { mutableStateOf(settings.boostBrightnessOnQr) }

@@ -99,10 +99,28 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    companion object {
+        const val EXTRA_CARD_ID = "extra_card_id"
+        const val EXTRA_FULLSCREEN_QR = "extra_fullscreen_qr"
+    }
+
+    private var targetCardIdFromIntent by mutableStateOf<String?>(null)
+    private var openFullscreenFromIntent by mutableStateOf(false)
+
+    private fun handleWidgetIntent(intent: Intent?) {
+        val cardId = intent?.getStringExtra(EXTRA_CARD_ID)
+        val openFullscreen = intent?.getBooleanExtra(EXTRA_FULLSCREEN_QR, false) ?: false
+        if (cardId != null) {
+            targetCardIdFromIntent = cardId
+            openFullscreenFromIntent = openFullscreen
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = CardRepository.getInstance(applicationContext)
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        handleWidgetIntent(intent)
 
         setContent {
             val cards by repository.cardsFlow.collectAsState()
@@ -134,6 +152,8 @@ class MainActivity : ComponentActivity() {
                                 MainScreen(
                                     cards = cards,
                                     settings = settings,
+                                    targetCardId = targetCardIdFromIntent,
+                                    openFullscreenQr = openFullscreenFromIntent,
                                     onEditCard = { id -> currentScreen = Screen.Editor(id) },
                                     onAddNewCard = { currentScreen = Screen.Editor(null) },
                                     onOpenSettings = { currentScreen = Screen.Settings },
@@ -282,6 +302,8 @@ class MainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
+        handleWidgetIntent(intent)
         val target = nfcTargetCard
         if (target != null && (intent.action == NfcAdapter.ACTION_TAG_DISCOVERED ||
                     intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED ||

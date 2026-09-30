@@ -142,10 +142,11 @@ Existing contact-sharing and digital business card solutions suffer from:
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| MILESTONE 3: Home Screen Widget                                          |
-| [ ] Native Android Home Screen Widget (Jetpack Glance)                   |
-| [ ] Widget configuration activity (card selector)                        |
-| [ ] Tap behavior: Full-screen modal (respects brightness boost setting)  |
+| MILESTONE 3: Home Screen Widget                                  [DONE]  |
+| [x] Native Android Home Screen Widget (Jetpack Glance)                   |
+| [x] Widget configuration activity (card selector with QR preview)        |
+| [x] Tap behavior: Full-screen modal (respects brightness boost setting)  |
+| [x] Automatic widget refresh when cards are added, edited, or deleted    |
 +--------------------------------------------------------------------------+
                                     |
                                     v
@@ -165,8 +166,12 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] OLED Pure Black & Material You dynamic themes                        |
 | [x] Individual record vCard (.vcf) import and parse                      |
 | [x] Full app backup & restore (.json) via Storage Access Framework       |
+| [x] 1-tap Autofill integration for Name, Phone, Email, Address, Wi-Fi    |
+| [x] Dedicated Country Code Picker ([ 🇺🇸 +1 ▾ ]) with dial pad support   |
+| [x] Flexible International Address Form (UPU S42 & 2-line RFC 2426 ADR)   |
 | [x] Support & Feedback section (GitHub issue templates)                  |
 | [x] About dialog & metadata (Thomas Stoll, MIT License)                  |
+| [ ] App icon design & branding assets                                    |
 | [ ] Play Store / F-Droid release packaging                               |
 +--------------------------------------------------------------------------+
 ```
@@ -175,6 +180,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 
 ## 5. Next Steps
 
-1. Implement **Milestone 3 (Home Screen Widget)** using Jetpack Glance.
-2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap. Note: this will need to only be active when the app is open (not in background or killed, locked/screen off, when the widget is on the home screen, etc.), and should have a toggle in the settings (default is off)
-3. Prepare release build & Play Store assets when ready.
+1. Design custom app icon & branding assets (replacing default Android robot).
+2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap (foreground only, settings toggle).
+3. Prepare release build & Play Store / F-Droid signing assets when ready.
+

@@ -72,6 +72,7 @@ class CardRepository private constructor(private val context: Context) {
         try {
             val content = json.encodeToString(cards)
             cardsFile.writeText(content)
+            com.sharecontact.app.widget.WidgetUpdater.updateAll(context)
         } catch (e: Exception) {
             e.printStackTrace()
         }
