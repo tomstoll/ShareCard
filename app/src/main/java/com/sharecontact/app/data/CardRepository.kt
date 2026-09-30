@@ -101,6 +101,7 @@ class CardRepository private constructor(private val context: Context) {
             urls = card.urls.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
             address = card.address.copy(
                 street = card.address.street.trim(),
+                extended = card.address.extended.trim(),
                 city = card.address.city.trim(),
                 state = card.address.state.trim(),
                 zip = card.address.zip.trim(),

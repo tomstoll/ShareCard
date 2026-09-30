@@ -97,10 +97,24 @@ fun CardEditorScreen(
     }
 
     var street by remember { mutableStateOf(existingCard?.address?.street ?: "") }
+    var extended by remember { mutableStateOf(existingCard?.address?.extended ?: "") }
     var city by remember { mutableStateOf(existingCard?.address?.city ?: "") }
     var state by remember { mutableStateOf(existingCard?.address?.state ?: "") }
     var zip by remember { mutableStateOf(existingCard?.address?.zip ?: "") }
-    var country by remember { mutableStateOf(existingCard?.address?.country ?: "") }
+    var country by remember {
+        mutableStateOf(
+            existingCard?.address?.country?.ifBlank { CountryCodeHelper.getDefaultCountry().name }
+                ?: CountryCodeHelper.getDefaultCountry().name
+        )
+    }
+    var showAddressCountryPicker by remember { mutableStateOf(false) }
+
+    val addressCountry = remember(country) {
+        CountryCodeHelper.findCountryByNameOrCode(country) ?: CountryCodeHelper.getDefaultCountry()
+    }
+    val addressLabels = remember(addressCountry) {
+        CountryCodeHelper.getAddressLabels(addressCountry.code)
+    }
     var note by remember { mutableStateOf(existingCard?.note ?: "") }
 
     // Wi-Fi fields
@@ -113,6 +127,20 @@ fun CardEditorScreen(
     var rawContent by remember { mutableStateOf(existingCard?.rawContent ?: "") }
 
     fun cleanAndSave() {
+        val hasAddressContent = street.isNotBlank() || extended.isNotBlank() || city.isNotBlank() || state.isNotBlank() || zip.isNotBlank()
+        val cleanedAddress = if (hasAddressContent) {
+            PostalAddress(
+                street = street.trim(),
+                extended = extended.trim(),
+                city = city.trim(),
+                state = state.trim(),
+                zip = zip.trim(),
+                country = country.trim()
+            )
+        } else {
+            PostalAddress()
+        }
+
         val trimmed = ShareCard(
             id = existingCard?.id ?: UUID.randomUUID().toString(),
             title = title.trim(),
@@ -127,7 +155,7 @@ fun CardEditorScreen(
             phones = phones.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
             emails = emails.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
             urls = urls.map { it.copy(label = it.label.trim(), value = it.value.trim()) }.filter { it.value.isNotBlank() },
-            address = PostalAddress(street.trim(), city.trim(), state.trim(), zip.trim(), country.trim()),
+            address = cleanedAddress,
             note = note.trim(),
             wifiSsid = wifiSsid.trim(),
             wifiPassword = wifiPassword.trim(),
@@ -141,9 +169,22 @@ fun CardEditorScreen(
     // Form constructed card for live preview & calculation
     val previewCard = remember(
         title, cardType, prefix, firstName, middleName, lastName, suffix,
-        organization, jobTitle, phones, emails, urls, street, city, state, zip, country,
+        organization, jobTitle, phones, emails, urls, street, extended, city, state, zip, country,
         note, wifiSsid, wifiPassword, wifiSecurity, wifiHidden, rawContent
     ) {
+        val hasAddress = street.isNotBlank() || extended.isNotBlank() || city.isNotBlank() || state.isNotBlank() || zip.isNotBlank()
+        val constructedAddress = if (hasAddress) {
+            PostalAddress(
+                street = street,
+                extended = extended,
+                city = city,
+                state = state,
+                zip = zip,
+                country = country
+            )
+        } else {
+            PostalAddress()
+        }
         ShareCard(
             id = existingCard?.id ?: UUID.randomUUID().toString(),
             title = title,
@@ -158,7 +199,7 @@ fun CardEditorScreen(
             phones = phones.filter { it.value.isNotBlank() },
             emails = emails.filter { it.value.isNotBlank() },
             urls = urls.filter { it.value.isNotBlank() },
-            address = PostalAddress(street, city, state, zip, country),
+            address = constructedAddress,
             note = note,
             wifiSsid = wifiSsid,
             wifiPassword = wifiPassword,
@@ -568,10 +609,55 @@ fun CardEditorScreen(
 
                     // Address
                     Text("Address", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Country / Region Selector
+                    Text(
+                        "Country / Region",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedCard(
+                        onClick = { showAddressCountryPicker = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(addressCountry.flagEmoji, fontSize = 22.sp)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = addressCountry.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = "Change country",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Street Address Line 1
                     OutlinedTextField(
                         value = street,
                         onValueChange = { street = it },
-                        label = { Text("Street Address") },
+                        label = { Text(addressLabels.street) },
+                        placeholder = { Text("e.g. 123 Main St") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .autofill(listOf(AutofillType.AddressStreet, AutofillType.PostalAddress)) { street = it },
@@ -581,15 +667,53 @@ fun CardEditorScreen(
                             imeAction = ImeAction.Next
                         )
                     )
+
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // Street Address Line 2 (Extended Address)
+                    OutlinedTextField(
+                        value = extended,
+                        onValueChange = { extended = it },
+                        label = { Text(addressLabels.extended) },
+                        placeholder = { Text("e.g. Apt 4B, Suite 200, Building C") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .autofill(listOf(AutofillType.AddressStreet)) { extended = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // City / Locality
+                    OutlinedTextField(
+                        value = city,
+                        onValueChange = { city = it },
+                        label = { Text(addressLabels.city) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .autofill(listOf(AutofillType.AddressLocality)) { city = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // State / Region & Postal Code / ZIP side by side
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
-                            value = city,
-                            onValueChange = { city = it },
-                            label = { Text("City") },
+                            value = state,
+                            onValueChange = { state = it },
+                            label = { Text(addressLabels.state) },
                             modifier = Modifier
-                                .weight(1f)
-                                .autofill(listOf(AutofillType.AddressLocality)) { city = it },
+                                .weight(1.1f)
+                                .autofill(listOf(AutofillType.AddressRegion)) { state = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
@@ -597,28 +721,15 @@ fun CardEditorScreen(
                             )
                         )
                         OutlinedTextField(
-                            value = state,
-                            onValueChange = { state = it },
-                            label = { Text("State") },
-                            modifier = Modifier
-                                .weight(0.6f)
-                                .autofill(listOf(AutofillType.AddressRegion)) { state = it },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Characters,
-                                imeAction = ImeAction.Next
-                            )
-                        )
-                        OutlinedTextField(
                             value = zip,
                             onValueChange = { zip = it },
-                            label = { Text("ZIP") },
+                            label = { Text(addressLabels.zip) },
                             modifier = Modifier
-                                .weight(0.8f)
+                                .weight(0.9f)
                                 .autofill(listOf(AutofillType.PostalCode)) { zip = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
+                                capitalization = KeyboardCapitalization.Characters,
                                 imeAction = ImeAction.Next
                             )
                         )
@@ -758,5 +869,16 @@ fun CardEditorScreen(
                 onDismissRequest = { activeCountryPickerIndex = null }
             )
         }
+    }
+
+    if (showAddressCountryPicker) {
+        CountryPickerDialog(
+            selectedCountry = addressCountry,
+            onSelectCountry = { picked ->
+                country = picked.name
+                showAddressCountryPicker = false
+            },
+            onDismissRequest = { showAddressCountryPicker = false }
+        )
     }
 }

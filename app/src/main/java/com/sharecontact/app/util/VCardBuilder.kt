@@ -71,11 +71,11 @@ object VCardBuilder {
             }
         }
 
-        // Address (ADR:;;Street;City;State;PostalCode;Country)
+        // Address (RFC 2426: ADR:pobox;extended;street;city;state;postalcode;country)
         val addr = card.address
-        if (addr.street.isNotBlank() || addr.city.isNotBlank() || addr.state.isNotBlank() ||
-            addr.zip.isNotBlank() || addr.country.isNotBlank()) {
-            sb.append("ADR;TYPE=HOME,POSTAL:;;")
+        if (addr.isNotBlank) {
+            sb.append("ADR;TYPE=HOME,POSTAL:;")
+                .append(escape(addr.extended)).append(";")
                 .append(escape(addr.street)).append(";")
                 .append(escape(addr.city)).append(";")
                 .append(escape(addr.state)).append(";")

@@ -18,6 +18,7 @@ object VCardParser {
         val emails = mutableListOf<LabeledItem>()
         val urls = mutableListOf<LabeledItem>()
         var street = ""
+        var extended = ""
         var city = ""
         var state = ""
         var zip = ""
@@ -61,6 +62,7 @@ object VCardParser {
                 }
                 keyPart.startsWith("ADR") -> {
                     val parts = valPart.split(";")
+                    if (parts.size > 1) extended = parts[1]
                     if (parts.size > 2) street = parts[2]
                     if (parts.size > 3) city = parts[3]
                     if (parts.size > 4) state = parts[4]
@@ -84,7 +86,14 @@ object VCardParser {
             phones = phones,
             emails = emails,
             urls = urls,
-            address = PostalAddress(street, city, state, zip, country),
+            address = PostalAddress(
+                street = street,
+                extended = extended,
+                city = city,
+                state = state,
+                zip = zip,
+                country = country
+            ),
             note = note
         )
     }

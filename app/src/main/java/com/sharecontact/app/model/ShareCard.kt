@@ -26,11 +26,32 @@ data class LabeledItem(
 @Serializable
 data class PostalAddress(
     val street: String = "",
+    val extended: String = "", // Apt, suite, unit, building, floor
     val city: String = "",
-    val state: String = "",
-    val zip: String = "",
-    val country: String = ""
-)
+    val state: String = "",    // State, province, region, county
+    val zip: String = "",      // Postal code, ZIP, postcode
+    val country: String = ""   // Country or region
+) {
+    val isNotBlank: Boolean
+        get() = street.isNotBlank() || extended.isNotBlank() || city.isNotBlank() ||
+                state.isNotBlank() || zip.isNotBlank()
+
+    fun formatted(singleLine: Boolean = false): String {
+        val lines = mutableListOf<String>()
+        val streetFull = listOf(street, extended).filter { it.isNotBlank() }.joinToString(", ")
+        if (streetFull.isNotBlank()) lines.add(streetFull)
+
+        val cityStateZip = listOf(
+            city,
+            listOf(state, zip).filter { it.isNotBlank() }.joinToString(" ")
+        ).filter { it.isNotBlank() }.joinToString(", ")
+        if (cityStateZip.isNotBlank()) lines.add(cityStateZip)
+
+        if (country.isNotBlank()) lines.add(country)
+
+        return if (singleLine) lines.joinToString(", ") else lines.joinToString("\n")
+    }
+}
 
 @Serializable
 data class ShareCard(

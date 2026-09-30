@@ -188,4 +188,115 @@ object CountryCodeHelper {
         val formatted = if (country.dialCode == "+1") formatUsCaNumber(trimmed) else trimmed
         return "${country.dialCode} $formatted"
     }
+
+    fun findCountryByNameOrCode(query: String): Country? {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) return null
+        return allCountries.find {
+            it.code.lowercase() == q || it.name.lowercase() == q
+        }
+    }
+
+    /**
+     * Context-aware address labels based on country standard (UPU / international conventions).
+     */
+    fun getAddressLabels(countryNameOrCode: String): AddressLabels {
+        val country = findCountryByNameOrCode(countryNameOrCode)
+        val code = country?.code ?: countryNameOrCode.trim().uppercase()
+        return when (code) {
+            "US" -> AddressLabels(
+                street = "Street Address",
+                extended = "Apt, Suite, Unit (Optional)",
+                city = "City",
+                state = "State",
+                zip = "ZIP Code"
+            )
+            "CA" -> AddressLabels(
+                street = "Street Address",
+                extended = "Apt, Suite, Unit (Optional)",
+                city = "City / Municipality",
+                state = "Province / Territory",
+                zip = "Postal Code"
+            )
+            "GB" -> AddressLabels(
+                street = "Street Address",
+                extended = "Flat, Suite, Building (Optional)",
+                city = "Town / City",
+                state = "County / Region (Optional)",
+                zip = "Postcode"
+            )
+            "AU" -> AddressLabels(
+                street = "Street Address",
+                extended = "Apt, Unit, Floor (Optional)",
+                city = "Suburb / Town",
+                state = "State / Territory",
+                zip = "Postcode"
+            )
+            "NZ" -> AddressLabels(
+                street = "Street Address",
+                extended = "Flat, Unit, Building (Optional)",
+                city = "Suburb / Town",
+                state = "Region (Optional)",
+                zip = "Postcode"
+            )
+            "IE" -> AddressLabels(
+                street = "Street Address",
+                extended = "Apt, Suite, Building (Optional)",
+                city = "Town / City",
+                state = "County",
+                zip = "Eircode / Postal Code"
+            )
+            "IN" -> AddressLabels(
+                street = "Street Address",
+                extended = "Flat, Building, Area (Optional)",
+                city = "City / District",
+                state = "State",
+                zip = "PIN Code"
+            )
+            "DE", "AT", "CH" -> AddressLabels(
+                street = "Street & House Number",
+                extended = "Apartment, Building (Optional)",
+                city = "City / Municipality",
+                state = "State / Canton (Optional)",
+                zip = "Postal Code (PLZ)"
+            )
+            "FR", "BE" -> AddressLabels(
+                street = "Street Address",
+                extended = "Apartment, Building, Floor (Optional)",
+                city = "City / Town",
+                state = "Region / Province (Optional)",
+                zip = "Postal Code"
+            )
+            "MX", "ES", "AR", "CO", "CL" -> AddressLabels(
+                street = "Street Address",
+                extended = "Interior / Apt / Suite (Optional)",
+                city = "City / Municipality",
+                state = "State / Province",
+                zip = "Postal Code (C.P.)"
+            )
+            "JP" -> AddressLabels(
+                street = "Street Address & Number",
+                extended = "Building, Apartment (Optional)",
+                city = "City / Ward / Town",
+                state = "Prefecture",
+                zip = "Postal Code"
+            )
+            else -> AddressLabels(
+                street = "Street Address",
+                extended = "Apt, Suite, Building, Floor (Optional)",
+                city = "City / Town",
+                state = "State / Province / Region",
+                zip = "Postal Code / ZIP"
+            )
+        }
+    }
 }
+
+data class AddressLabels(
+    val street: String = "Street Address",
+    val extended: String = "Apt, Suite, Unit (Optional)",
+    val city: String = "City",
+    val state: String = "State",
+    val zip: String = "ZIP Code"
+)
+
