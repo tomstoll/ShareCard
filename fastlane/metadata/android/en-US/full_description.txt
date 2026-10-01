@@ -1,4 +1,4 @@
-ShareCard is a 100% offline, privacy-first digital business card and contact-sharing application designed for modern Android devices.
+ShareCard is a 100% offline, privacy-first contact & link sharing application for modern Android devices.
 
 🔒 ZERO INTERNET PERMISSION
 ShareCard does not request or include the `android.permission.INTERNET` permission in its manifest. Your contact details, notes, and addresses are stored strictly on your local device. No tracking, no cloud servers, no analytics, and no accounts required.
