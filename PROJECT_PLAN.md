@@ -174,15 +174,37 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] Support & Feedback section (GitHub issue templates)                  |
 | [x] About dialog & metadata (Thomas Stoll, MIT License)                  |
 | [x] App icon design & branding assets (Adaptive + Themed icons)          |
-| [x] Play Store / F-Droid release packaging & metadata                    |
+| [x] Release packaging (R8/ProGuard rules, automated CI signing workflow) |
+| [-] Scrapped: Google Play Store (20-tester / 14-day requirement)         |
+| [x] GitHub Releases primary distribution & F-Droid metadata ready        |
 +--------------------------------------------------------------------------+
 ```
 
 ---
 
-## 5. Next Steps
+## 5. Release Strategy & Next Steps
 
-1. Tag release `v1.0.0` to trigger automated GitHub Actions release workflow.
-2. Submit metadata to F-Droid (via merge request to `fdroiddata`).
-3. Upload `app-release.aab` to Google Play Console internal/production track.
+### Distribution Pivot
+Google Play Store publishing was evaluated and removed from scope. Google's requirement for new personal developer accounts to recruit 20 independent testers for 14 continuous days is impractical for a privacy-focused utility app made to share with friends and colleagues.
+
+**Primary Distribution:** Direct APK distribution via **GitHub Releases**.
+- Automated builds via `.github/workflows/release.yml` upon pushing a tag (`v*`).
+- Release APKs are automatically signed, optimized via R8, and packaged as `ShareCard-vX.X.X.apk`.
+- Zero account setup, zero fees, zero tracking.
+
+**Secondary Distribution (Optional):**
+- Community inclusion in **F-Droid** repository using the prepared `metadata/com.sharecontact.app.yml`.
+
+### Launch Steps
+1. Push local commits to `origin/main`:
+   ```powershell
+   git push origin main
+   ```
+2. Tag the initial stable release:
+   ```powershell
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+3. Verify the GitHub Actions workflow at `https://github.com/tomstoll/ShareCard/actions` produces the signed release assets.
+4. Share `https://github.com/tomstoll/ShareCard/releases/latest` with friends and colleagues.
 
