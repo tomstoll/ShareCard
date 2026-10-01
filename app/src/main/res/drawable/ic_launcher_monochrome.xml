@@ -1,41 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- 3 Corner Finder Frames (White) -->
+    <!-- 3 Corner Finder Frames -->
     <path
         android:fillColor="#FFFFFF"
         android:fillType="evenOdd"
         android:pathData="M32.91,29.11 h5.91 a3.80,3.80 0 0 1 3.80,3.80 v5.91 a3.80,3.80 0 0 1 -3.80,3.80 h-5.91 a3.80,3.80 0 0 1 -3.80,-3.80 v-5.91 a3.80,3.80 0 0 1 3.80,-3.80 z M37.76,32.27 h-3.80 a1.69,1.69 0 0 0 -1.69,1.69 v3.80 a1.69,1.69 0 0 0 1.69,1.69 h3.80 a1.69,1.69 0 0 0 1.69,-1.69 v-3.80 a1.69,1.69 0 0 0 -1.69,-1.69 z M34.80,33.33 h2.11 a1.48,1.48 0 0 1 1.48,1.48 v2.11 a1.48,1.48 0 0 1 -1.48,1.48 h-2.11 a1.48,1.48 0 0 1 -1.48,-1.48 v-2.11 a1.48,1.48 0 0 1 1.48,-1.48 z M69.19,29.11 h5.91 a3.80,3.80 0 0 1 3.80,3.80 v5.91 a3.80,3.80 0 0 1 -3.80,3.80 h-5.91 a3.80,3.80 0 0 1 -3.80,-3.80 v-5.91 a3.80,3.80 0 0 1 3.80,-3.80 z M74.04,32.27 h-3.80 a1.69,1.69 0 0 0 -1.69,1.69 v3.80 a1.69,1.69 0 0 0 1.69,1.69 h3.80 a1.69,1.69 0 0 0 1.69,-1.69 v-3.80 a1.69,1.69 0 0 0 -1.69,-1.69 z M71.09,33.33 h2.11 a1.48,1.48 0 0 1 1.48,1.48 v2.11 a1.48,1.48 0 0 1 -1.48,1.48 h-2.11 a1.48,1.48 0 0 1 -1.48,-1.48 v-2.11 a1.48,1.48 0 0 1 1.48,-1.48 z M32.91,65.39 h5.91 a3.80,3.80 0 0 1 3.80,3.80 v5.91 a3.80,3.80 0 0 1 -3.80,3.80 h-5.91 a3.80,3.80 0 0 1 -3.80,-3.80 v-5.91 a3.80,3.80 0 0 1 3.80,-3.80 z M37.76,68.55 h-3.80 a1.69,1.69 0 0 0 -1.69,1.69 v3.80 a1.69,1.69 0 0 0 1.69,1.69 h3.80 a1.69,1.69 0 0 0 1.69,-1.69 v-3.80 a1.69,1.69 0 0 0 -1.69,-1.69 z M34.80,69.61 h2.11 a1.48,1.48 0 0 1 1.48,1.48 v2.11 a1.48,1.48 0 0 1 -1.48,1.48 h-2.11 a1.48,1.48 0 0 1 -1.48,-1.48 v-2.11 a1.48,1.48 0 0 1 1.48,-1.48 z" />
-    <!-- Radiating Signal Arcs (White) -->
+    <!-- Radiating Signal Arcs -->
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="1.58"
         android:strokeLineCap="round"
         android:pathData="M60.78,74.86 A21.94,21.94 0 0,0 74.86,60.78 M62.08,78.88 A26.16,26.16 0 0,0 78.88,62.08 M63.39,82.89 A30.38,30.38 0 0,0 82.89,63.39" />
-    <!-- Circle Badge Blue Background (Obscures inner corners of boxes) -->
-    <path android:pathData="M34.38,54.00a19.62,19.62 0 1,0 39.23,0a19.62,19.62 0 1,0 -39.23,0">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="0"
-                android:startY="0"
-                android:endX="0"
-                android:endY="108"
-                android:type="linear">
-                <item android:offset="0.0" android:color="#2563EB" />
-                <item android:offset="1.0" android:color="#1D4ED8" />
-            </gradient>
-        </aapt:attr>
-    </path>
     <!-- Circle Badge White Ring Border -->
     <path
         android:strokeColor="#FFFFFF"
         android:strokeWidth="1.16"
         android:pathData="M34.38,54.00a19.62,19.62 0 1,0 39.23,0a19.62,19.62 0 1,0 -39.23,0" />
-    <!-- Avatar Head & Shoulders (White) -->
+    <!-- Avatar Head & Shoulders -->
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M46.94,48.11a7.06,7.06 0 1,0 14.12,0a7.06,7.06 0 1,0 -14.12,0 M51.25,57.14 h5.49 a10.99,10.99 0 0 1 10.99,10.99 v-5.49 a10.99,10.99 0 0 1 -10.99,10.99 h-5.49 a10.99,10.99 0 0 1 -10.99,-10.99 v5.49 a10.99,10.99 0 0 1 10.99,-10.99 z " />

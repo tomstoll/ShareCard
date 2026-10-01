@@ -76,9 +76,10 @@ Existing contact-sharing and digital business card solutions suffer from:
 - **Widget Configuration:** Select which card from the carousel is pinned to the widget. Multiple widgets can be added to the home screen for different cards (e.g. one for Work, one for Personal).
 - **Widget Tap Behavior:** Tapping launches a full-screen modal for effortless scanning. If the setting *"Boost Brightness when showing QR code"* is enabled, the screen brightness will temporarily boost; if disabled, brightness remains unchanged. It acts seamlessly as if the user tapped the QR code from within the main app.
 
-### 3.4 NFC Sharing: Physical Tags vs. Phone-to-Phone Tap
+### 3.4 NFC Sharing: Physical Tags (Scrapped HCE)
 #### Why Physical NFC Tags are the Gold Standard for iOS + Android
-- **Apple iOS Limitations:** Apple restricts background NFC tag reading on iPhones (iPhone XR through iPhone 16) to **passive NDEF tags** (like NTAG213, NTAG215, NTAG216). iPhones **do not** support Android Beam (deprecated by Google in Android 10), and iOS does not reliably read Host Card Emulation (HCE) phone-to-phone taps.
+- **Apple iOS Limitations:** Apple restricts background NFC tag reading on iPhones (iPhone XR through iPhone 16) to **passive NDEF tags** (like NTAG213, NTAG215, NTAG216). iPhones **do not** support Android Beam (deprecated by Google in Android 10), and iOS does not read Host Card Emulation (HCE) phone-to-phone taps.
+- **Android Quick Share:** Android devices already have built-in Quick Share for device-to-device transfers, making experimental phone-to-phone HCE redundant and fragile.
 - **The Solution:** 
   1. **Physical Tag Writer (Core Focus):** Write an NDEF `text/vcard` or NDEF URI payload to an inexpensive NFC sticker (e.g. affixed to the back of your phone case) or an NFC smart business card. When tapped against *any* modern iPhone or Android, it instantly pops up native "Add Contact" or opens the URL without any app installed.
   2. **In-App "NFC Buyer's Guide & How-To" Screen:** A dedicated info screen detailing:
@@ -86,7 +87,7 @@ Existing contact-sharing and digital business card solutions suffer from:
      - Step-by-step instructions on where to tap on different devices (top of iPhone, center/top back on Android).
      - How to write-lock or keep tags rewritable.
   3. **Tag Capacity Calculator:** Real-time byte counter in the editor and writer showing exact payload size and chip compatibility (NTAG213: 144B, NTAG215: 504B, NTAG216: 888B).
-  4. **Experimental HCE (Phone-to-Phone):** Provide an optional Host Card Emulation mode for Android-to-Android tap sharing.
+  4. ~~**Experimental HCE (Phone-to-Phone):**~~ Scrapped (redundant with Quick Share and incompatible with Apple iOS).
 
 ### 3.5 Backup, Export & Cloud/Local Portability (Via Storage Access Framework)
 - **Zero Storage & Zero Network Permissions Required:**
@@ -147,6 +148,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] Widget configuration activity (card selector with QR preview)        |
 | [x] Tap behavior: Full-screen modal (respects brightness boost setting)  |
 | [x] Automatic widget refresh when cards are added, edited, or deleted    |
+| [x] Quick switch card from QR modal header                               |
 +--------------------------------------------------------------------------+
                                     |
                                     v
@@ -157,7 +159,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] Byte counter & tag capacity guidance (NTAG213 / 215 / 216)           |
 | [x] Dedicated in-app "NFC Guide" info screen (with sensor warning)       |
 | [x] Tag write verification & status feedback                             |
-| [ ] Experimental HCE Phone-to-Phone Emulation                            |
+| [-] Scrapped: Experimental HCE (redundant with Quick Share, no iOS)      |
 +--------------------------------------------------------------------------+
                                     |
                                     v
@@ -171,7 +173,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] Flexible International Address Form (UPU S42 & 2-line RFC 2426 ADR)   |
 | [x] Support & Feedback section (GitHub issue templates)                  |
 | [x] About dialog & metadata (Thomas Stoll, MIT License)                  |
-| [ ] App icon design & branding assets                                    |
+| [x] App icon design & branding assets (Adaptive + Themed icons)          |
 | [ ] Play Store / F-Droid release packaging                               |
 +--------------------------------------------------------------------------+
 ```
@@ -180,7 +182,5 @@ Existing contact-sharing and digital business card solutions suffer from:
 
 ## 5. Next Steps
 
-1. Design custom app icon & branding assets (replacing default Android robot).
-2. (Optional) Implement experimental Host Card Emulation (HCE) for phone-to-phone Android NFC tap (foreground only, settings toggle).
-3. Prepare release build & Play Store / F-Droid signing assets when ready.
+1. Play Store / F-Droid release packaging & metadata when ready (Keystore generation, Proguard rules, reproducible build verification).
 
