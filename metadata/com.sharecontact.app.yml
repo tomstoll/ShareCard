@@ -1,0 +1,45 @@
+Categories:
+  - Connectivity
+  - Office
+  - Security
+License: MIT
+AuthorName: Thomas Stoll
+SourceCode: https://github.com/tomstoll/ShareCard
+IssueTracker: https://github.com/tomstoll/ShareCard/issues
+Changelog: https://github.com/tomstoll/ShareCard/releases
+
+Name: ShareCard
+Summary: 100% offline, privacy-first digital business card & QR/NFC contact sharing
+Description: |-
+  ShareCard is an open-source, 100% offline, privacy-first Android digital
+  business card and contact-sharing application built with Kotlin and Jetpack Compose.
+
+  Guarantees:
+  * Zero Internet Permission: android.permission.INTERNET is never declared.
+  * Single Permission: android.permission.NFC (normal permission, silent install).
+  * Zero Storage Permissions: Uses Storage Access Framework (SAF) for backups.
+  * Zero Settings Permissions: Brightness boost is window-local.
+
+  Features:
+  * Dynamic QR Code Generator (vCard 3.0, Wi-Fi, URL, Text)
+  * Physical NFC Tag Writer (NDEF text/vCard & URI with byte capacity counter)
+  * Jetpack Glance Home Screen Widget with translucent QR viewer
+  * 1-Tap Autofill & International Country Code dialer
+  * Flexible International Address Form (UPU S42 & RFC 2426 ADR)
+  * Material You dynamic theming and Pure OLED dark mode
+
+RepoType: git
+Repo: https://github.com/tomstoll/ShareCard.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1

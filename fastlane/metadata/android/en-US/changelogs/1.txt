@@ -1,0 +1,7 @@
+• Initial release of ShareCard!
+• 100% offline digital business cards with QR code generator.
+• Physical NFC tag writer with real-time byte counter.
+• Jetpack Glance home screen widget with quick QR viewer & brightness toggle.
+• 1-Tap profile autofill, country code dialer, and flexible international address form.
+• Material You dynamic colors & Pure OLED dark theme.
+• Safe local backup & restore (.vcf and .json).

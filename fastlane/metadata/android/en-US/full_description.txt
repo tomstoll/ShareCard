@@ -1,0 +1,37 @@
+ShareCard is a 100% offline, privacy-first digital business card and contact-sharing application designed for modern Android devices.
+
+🔒 ZERO INTERNET PERMISSION
+ShareCard does not request or include the `android.permission.INTERNET` permission in its manifest. Your contact details, notes, and addresses are stored strictly on your local device. No tracking, no cloud servers, no analytics, and no accounts required.
+
+📱 INSTANT QR CODE GENERATION
+• Multiple Card Types: Create cards for Personal, Work, Wi-Fi Networks, URLs, or Custom Text.
+• vCard 3.0 Standard: Generates standard vCard QR codes recognized instantly by iOS and Android camera apps.
+• In-App Brightness Boost: Tap the QR code to boost brightness to 100% for effortless scanning in direct sunlight or dark venues.
+• Real-Time Preview: Changes to your card update your QR code immediately.
+
+📶 PHYSICAL NFC TAG WRITER
+• Program your own physical NFC business cards, key fobs, or stickers (NTAG213, NTAG215, NTAG216).
+• Real-time NDEF byte capacity meter shows exactly how many bytes remain on your tag.
+• Built-in NFC Hardware Guide explains tag capacities and sensor placement.
+
+⚡ HOME SCREEN WIDGET
+• Add a clean Jetpack Glance widget directly to your home screen.
+• Tap to open an instant translucent QR overlay with 1-tap brightness toggle.
+• Switch active cards directly from your home screen without opening the full editor.
+
+📋 SMART & FLEXIBLE CONTACT EDITOR
+• 1-Tap Autofill: Quickly autofill your contact details directly from your Android "My Profile".
+• International Country Code Picker: Search 200+ countries with dial codes and smart international phone number formatting (E.164).
+• Flexible Address Form: Compatible with both standard 2-line street addresses and international multi-line formats (Universal Postal Union S42 & RFC 2426).
+
+💾 SAFE, LOCAL BACKUPS
+• Export and import your cards as standard .vcf (vCard) or JSON backup files.
+• Uses the native Android Storage Access Framework (SAF)—no storage permissions required.
+
+🎨 MODERN DESIGN & MATERIAL YOU
+• Dynamic Theming: Adapts seamlessly to your system wallpaper colors (Android 12+).
+• Pure OLED Black: Deep black dark mode for battery savings on AMOLED displays.
+• Adaptive & Themed Icons: Native monochrome themed icon support for Android 13+.
+
+ShareCard is 100% free, open source (MIT License), and respects your digital autonomy.
+Source code: https://github.com/tomstoll/ShareCard

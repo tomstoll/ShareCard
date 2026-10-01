@@ -164,7 +164,7 @@ Existing contact-sharing and digital business card solutions suffer from:
                                     |
                                     v
 +--------------------------------------------------------------------------+
-| MILESTONE 5: Polish, Themes & Data Portability                  [PARTIAL]|
+| MILESTONE 5: Polish, Themes & Data Portability                 [COMPLETE]|
 | [x] OLED Pure Black & Material You dynamic themes                        |
 | [x] Individual record vCard (.vcf) import and parse                      |
 | [x] Full app backup & restore (.json) via Storage Access Framework       |
@@ -174,7 +174,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 | [x] Support & Feedback section (GitHub issue templates)                  |
 | [x] About dialog & metadata (Thomas Stoll, MIT License)                  |
 | [x] App icon design & branding assets (Adaptive + Themed icons)          |
-| [ ] Play Store / F-Droid release packaging                               |
+| [x] Play Store / F-Droid release packaging & metadata                    |
 +--------------------------------------------------------------------------+
 ```
 
@@ -182,5 +182,7 @@ Existing contact-sharing and digital business card solutions suffer from:
 
 ## 5. Next Steps
 
-1. Play Store / F-Droid release packaging & metadata when ready (Keystore generation, Proguard rules, reproducible build verification).
+1. Tag release `v1.0.0` to trigger automated GitHub Actions release workflow.
+2. Submit metadata to F-Droid (via merge request to `fdroiddata`).
+3. Upload `app-release.aab` to Google Play Console internal/production track.
 
